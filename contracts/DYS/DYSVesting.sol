@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// The below is a modified version of the original code found under
+// The below is a modified version of the original open-source code found under
 // https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/contracts/TokenVesting.sol
 // released under the Apache-2.0 license
 // Original license: https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/LICENSE
@@ -101,8 +101,8 @@ contract DYSVesting is Ownable, ReentrancyGuard {
 
 
     /**
-    * @notice Returns the total amount of vesting schedules.
-    * @return the total amount of vesting schedules
+    * @notice Returns the total amount of vested funds.
+    * @return the total amount of vested funds
     */
     function getVestingSchedulesTotalAmount()
     external
@@ -112,7 +112,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
     }
 
     /**
-    * @dev Returns the address of the ERC20 token managed by the vesting contract.
+    * @dev Returns the address of the DYS ERC20 token managed by the vesting contract.
     */
     function getToken()
     external
@@ -149,6 +149,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
         require(duration > 0, "DYSVesting: duration must be > 0");
         require(amount > 0, "DYSVesting: amount must be > 0");
         require(slicePeriodSeconds >= 1, "DYSVesting: slicePeriodSeconds must be >= 1");
+        require(cliffDelta <= duration, "DYSVesting: cliffDelta cannot be higher than duration");
         bytes32 vestingScheduleId = computeNextVestingScheduleIdForHolder(beneficiary);
         uint256 cliff = start + cliffDelta;
         _vestingSchedules[vestingScheduleId] = VestingSchedule(
@@ -183,7 +184,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
             release(vestingScheduleId, vestedAmount);
         }
         uint256 unreleased = vestingSchedule.amountTotal - vestingSchedule.released;
-        _vestingSchedulesTotalAmount = _vestingSchedulesTotalAmount - unreleased;
+        _vestingSchedulesTotalAmount -= unreleased;
         vestingSchedule.revoked = true;
         emit Revoked(vestingScheduleId);
     }
@@ -312,8 +313,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
             uint256 vestedSlicePeriods = timeFromStart / secondsPerSlice;
             uint256 vestedSeconds = vestedSlicePeriods * secondsPerSlice;
             uint256 vestedAmount = vestingSchedule.amountTotal * vestedSeconds / vestingSchedule.duration;
-            vestedAmount -= vestingSchedule.released;
-            return vestedAmount;
+            return vestedAmount - vestingSchedule.released;
         }
     }
 

@@ -118,7 +118,9 @@ describe("DYSVesting", function () {
         tokenVesting.connect(beneficiary).release(vestingScheduleId, 10)
       )
         .to.emit(dysToken, "Transfer")
-        .withArgs(tokenVesting.address, beneficiary.address, 10);
+        .withArgs(tokenVesting.address, beneficiary.address, 10)
+        .to.emit(tokenVesting, "Released")
+        .withArgs(vestingScheduleId, 10);
 
       // check that the vested amount is now 40
       expect(
@@ -152,12 +154,17 @@ describe("DYSVesting", function () {
         tokenVesting.connect(beneficiary).release(vestingScheduleId, 45)
       )
         .to.emit(dysToken, "Transfer")
-        .withArgs(tokenVesting.address, beneficiary.address, 45);
+        .withArgs(tokenVesting.address, beneficiary.address, 45)
+        .to.emit(tokenVesting, "Released")
+        .withArgs(vestingScheduleId, 45);
 
       // owner release vested tokens (45)
       await expect(tokenVesting.connect(owner).release(vestingScheduleId, 45))
         .to.emit(dysToken, "Transfer")
-        .withArgs(tokenVesting.address, beneficiary.address, 45);
+        .withArgs(tokenVesting.address, beneficiary.address, 45)
+        .to.emit(tokenVesting, "Released")
+        .withArgs(vestingScheduleId, 45);
+
       vestingSchedule = await tokenVesting.getVestingSchedule(
         vestingScheduleId
       );
@@ -176,7 +183,10 @@ describe("DYSVesting", function () {
       await expect(
         tokenVesting.connect(addr2).revoke(vestingScheduleId)
       ).to.be.revertedWith("Ownable: caller is not the owner");
-      await tokenVesting.revoke(vestingScheduleId);
+
+      await expect(tokenVesting.revoke(vestingScheduleId))
+        .to.emit(tokenVesting, "Revoked")
+        .withArgs(vestingScheduleId);
 
       // check if withdrawable is still 900
       expect(await tokenVesting.getWithdrawableAmount()).to.equal(900);
@@ -254,10 +264,76 @@ describe("DYSVesting", function () {
 
       await expect(tokenVesting.revoke(vestingScheduleId))
         .to.emit(dysToken, "Transfer")
-        .withArgs(tokenVesting.address, beneficiary.address, 50);
+        .withArgs(tokenVesting.address, beneficiary.address, 50)
+        .to.emit(tokenVesting, "Released")
+        .withArgs(vestingScheduleId, 50)
+        .to.emit(tokenVesting, "Revoked")
+        .withArgs(vestingScheduleId);
 
       // check if withdrawable is now 950
       expect(await tokenVesting.getWithdrawableAmount()).to.equal(950);
+    });
+
+    it("Should handle cliff configuration as expected", async function () {
+      // deploy vesting contract
+      const tokenVesting = await DYSVesting.deploy(dysToken.address);
+      await tokenVesting.deployed();
+      expect((await tokenVesting.getToken()).toString()).to.equal(
+        dysToken.address
+      );
+      // send tokens to vesting contract
+      await expect(dysToken.transfer(tokenVesting.address, 1000))
+        .to.emit(dysToken, "Transfer")
+        .withArgs(owner.address, tokenVesting.address, 1000);
+
+      const baseTime = 1622551248;
+      const beneficiary = addr1;
+      const startTime = baseTime;
+      const cliff = 500;
+      const duration = 1000;
+      const slicePeriodSeconds = 1;
+      const revokable = false;
+      const amount = 100;
+
+      // create new vesting schedule
+      await tokenVesting.createVestingSchedule(
+        beneficiary.address,
+        startTime,
+        cliff,
+        duration,
+        slicePeriodSeconds,
+        revokable,
+        amount
+      );
+
+      // compute vesting schedule id
+      const vestingScheduleId =
+        await tokenVesting.computeVestingScheduleIdForAddressAndIndex(
+          beneficiary.address,
+          0
+        );
+
+      // set time to almost half the vesting period
+      const almostHalfTime = baseTime + duration / 2 - 1;
+      await tokenVesting.setCurrentTime(almostHalfTime);
+
+      // vested amount should be 0, as cliff was not yet reached
+      expect(
+        await tokenVesting
+          .connect(beneficiary)
+          .computeReleasableAmount(vestingScheduleId)
+      ).to.be.equal(0);
+
+      // set time to half the vesting period
+      const halfTime = baseTime + duration / 2;
+      await tokenVesting.setCurrentTime(halfTime);
+
+      // vested amount should be half the total amount
+      expect(
+        await tokenVesting
+          .connect(beneficiary)
+          .computeReleasableAmount(vestingScheduleId)
+      ).to.be.equal(50);
     });
 
     it("Should be unable to revoke vesting period which is not revocable", async function () {

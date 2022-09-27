@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// The below is a modified version of the original code found under
+// The below is a modified version of the original open-source code found under
 // https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/contracts/MockTokenVesting.sol
 // released under the Apache-2.0 license
 // Original license: https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/LICENSE
