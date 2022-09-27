@@ -65,10 +65,6 @@ contract DYSVesting is Ownable, ReentrancyGuard {
         _token = IERC20(token_);
     }
 
-    receive() external payable {}
-
-    fallback() external payable {}
-
     /**
     * @dev Returns the number of vesting schedules associated to a beneficiary.
     * @return the number of vesting schedules
@@ -226,7 +222,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
         uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
         require(vestedAmount >= amount, "DYSVesting: cannot release tokens, not enough vested tokens");
         vestingSchedule.released += amount;
-        _vestingSchedulesTotalAmount - amount;
+        _vestingSchedulesTotalAmount -= amount;
         _token.safeTransfer(vestingSchedule.beneficiary, amount);
         emit Released(vestingScheduleId, amount);
     }
@@ -285,16 +281,6 @@ contract DYSVesting is Ownable, ReentrancyGuard {
     view
     returns(bytes32) {
         return computeVestingScheduleIdForAddressAndIndex(holder, _holdersVestingCount[holder]);
-    }
-
-    /**
-    * @dev Returns the last vesting schedule for a given holder address.
-    */
-    function getLastVestingScheduleForHolder(address holder)
-    public
-    view
-    returns(VestingSchedule memory) {
-        return _vestingSchedules[computeVestingScheduleIdForAddressAndIndex(holder, _holdersVestingCount[holder] - 1)];
     }
 
     /**

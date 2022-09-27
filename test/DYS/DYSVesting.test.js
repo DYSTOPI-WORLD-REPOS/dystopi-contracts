@@ -13,6 +13,7 @@ describe("DYSVesting", function () {
     Token = await ethers.getContractFactory("DYSToken");
     DYSVesting = await ethers.getContractFactory("MockDYSVesting");
   });
+
   beforeEach(async function () {
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
     dysToken = await Token.deploy(owner.address, 1_000_000_000);
@@ -68,6 +69,12 @@ describe("DYSVesting", function () {
         )
       ).to.be.equal(1);
 
+      // total vested at 100
+      expect(await tokenVesting.getVestingSchedulesTotalAmount()).to.be.equal(100);
+
+      // check if withdrawable is now 900
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(900);
+
       // compute vesting schedule id
       const vestingScheduleId =
         await tokenVesting.computeVestingScheduleIdForAddressAndIndex(
@@ -119,6 +126,10 @@ describe("DYSVesting", function () {
           .connect(beneficiary)
           .computeReleasableAmount(vestingScheduleId)
       ).to.be.equal(40);
+
+      // check if withdrawable is now 900
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(900);
+
       let vestingSchedule = await tokenVesting.getVestingSchedule(
         vestingScheduleId
       );
@@ -167,6 +178,9 @@ describe("DYSVesting", function () {
       ).to.be.revertedWith("Ownable: caller is not the owner");
       await tokenVesting.revoke(vestingScheduleId);
 
+      // check if withdrawable is still 900
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(900);
+
       /*
        * TEST SUMMARY
        * deploy vesting contract
@@ -201,6 +215,9 @@ describe("DYSVesting", function () {
         .to.emit(dysToken, "Transfer")
         .withArgs(owner.address, tokenVesting.address, 1000);
 
+      // check if withdrawable is now 1000
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(1000);
+
       const baseTime = 1622551248;
       const beneficiary = addr1;
       const startTime = baseTime;
@@ -221,6 +238,9 @@ describe("DYSVesting", function () {
         amount
       );
 
+      // check if withdrawable is now 900
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(900);
+
       // compute vesting schedule id
       const vestingScheduleId =
         await tokenVesting.computeVestingScheduleIdForAddressAndIndex(
@@ -235,6 +255,190 @@ describe("DYSVesting", function () {
       await expect(tokenVesting.revoke(vestingScheduleId))
         .to.emit(dysToken, "Transfer")
         .withArgs(tokenVesting.address, beneficiary.address, 50);
+
+      // check if withdrawable is now 950
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(950);
+    });
+
+    it("Should be unable to revoke vesting period which is not revocable", async function () {
+      // deploy vesting contract
+      const tokenVesting = await DYSVesting.deploy(dysToken.address);
+      await tokenVesting.deployed();
+      expect((await tokenVesting.getToken()).toString()).to.equal(
+        dysToken.address
+      );
+      // send tokens to vesting contract
+      await expect(dysToken.transfer(tokenVesting.address, 1000))
+        .to.emit(dysToken, "Transfer")
+        .withArgs(owner.address, tokenVesting.address, 1000);
+
+      const baseTime = 1622551248;
+      const beneficiary = addr1;
+      const startTime = baseTime;
+      const cliff = 0;
+      const duration = 1000;
+      const slicePeriodSeconds = 1;
+      const revokable = false;
+      const amount = 100;
+
+      // create new vesting schedule
+      await tokenVesting.createVestingSchedule(
+        beneficiary.address,
+        startTime,
+        cliff,
+        duration,
+        slicePeriodSeconds,
+        revokable,
+        amount
+      );
+
+      // compute vesting schedule id
+      const vestingScheduleId =
+        await tokenVesting.computeVestingScheduleIdForAddressAndIndex(
+          beneficiary.address,
+          0
+        );
+
+      await expect(tokenVesting.revoke(vestingScheduleId))
+        .to.revertedWith("DYSVesting: vesting is not revocable")
+
+      // check if withdrawable is still 900
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(900);
+    });
+
+    it("Should be able to withdraw the withdrawable amount", async function () {
+      // deploy vesting contract
+      const tokenVesting = await DYSVesting.deploy(dysToken.address);
+      await tokenVesting.deployed();
+      expect((await tokenVesting.getToken()).toString()).to.equal(
+        dysToken.address
+      );
+      // send tokens to vesting contract
+      await expect(dysToken.transfer(tokenVesting.address, 1000))
+        .to.emit(dysToken, "Transfer")
+        .withArgs(owner.address, tokenVesting.address, 1000);
+
+      expect(await tokenVesting.getWithdrawableAmount()).to.be.equal(1000);
+
+      await expect(tokenVesting.withdraw(1000))
+        .to.emit(dysToken, "Transfer")
+        .withArgs(tokenVesting.address, owner.address, 1000);
+
+      expect(await tokenVesting.getWithdrawableAmount()).to.be.equal(0);
+
+      // send tokens to vesting contract again
+      await expect(dysToken.transfer(tokenVesting.address, 1000))
+        .to.emit(dysToken, "Transfer")
+        .withArgs(owner.address, tokenVesting.address, 1000);
+
+      expect(await tokenVesting.getWithdrawableAmount()).to.be.equal(1000);
+
+      const baseTime = 1622551248;
+      const beneficiary = addr1;
+      const startTime = baseTime;
+      const cliff = 0;
+      const duration = 1000;
+      const slicePeriodSeconds = 1;
+      const revokable = false;
+      const amount = 100;
+
+      // create new vesting schedule
+      await tokenVesting.createVestingSchedule(
+        beneficiary.address,
+        startTime,
+        cliff,
+        duration,
+        slicePeriodSeconds,
+        revokable,
+        amount
+      );
+
+      // check if withdrawable is 900
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(900);
+
+      // cannot withdraw more
+      await expect(tokenVesting.withdraw(901))
+        .to.revertedWith("DYSVesting: not enough withdrawable funds");
+
+      // withdraw
+      await expect(tokenVesting.withdraw(900))
+        .to.emit(dysToken, "Transfer")
+        .withArgs(tokenVesting.address, owner.address, 900);
+
+      // check if withdrawable is 0
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(0);
+    });
+
+    it("Should handle multiple schedules correctly", async function () {
+      const tokenVesting = await DYSVesting.deploy(dysToken.address);
+      await tokenVesting.deployed();
+
+      // send tokens to vesting contract
+      await expect(dysToken.transfer(tokenVesting.address, 1000))
+        .to.emit(dysToken, "Transfer")
+        .withArgs(owner.address, tokenVesting.address, 1000);
+
+      const baseTime = 1622551248;
+      const beneficiary1 = addr1;
+      const beneficiary2 = addr2;
+      const startTime = baseTime;
+      const cliff = 0;
+      const duration = 1000;
+      const slicePeriodSeconds = 1;
+      const revokable = false;
+      const amount1 = 100;
+      const amount2 = 150;
+
+      // create new vesting schedule for beneficiary1
+      await tokenVesting.createVestingSchedule(
+        beneficiary1.address,
+        startTime,
+        cliff,
+        duration,
+        slicePeriodSeconds,
+        revokable,
+        amount1
+      );
+      // create new vesting schedule for beneficiary1
+      await tokenVesting.createVestingSchedule(
+        beneficiary1.address,
+        startTime,
+        cliff,
+        duration,
+        slicePeriodSeconds,
+        revokable,
+        amount2
+      );
+      // create new vesting schedule for beneficiary2
+      await tokenVesting.createVestingSchedule(
+        beneficiary2.address,
+        startTime,
+        cliff,
+        duration,
+        slicePeriodSeconds,
+        revokable,
+        amount1
+      );
+
+      // check if withdrawable value is correct
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(650);
+
+      // count by beneficiary
+      expect(await tokenVesting.getVestingSchedulesCountByBeneficiary(beneficiary1.address))
+        .to.be.equal(2);
+      expect(await tokenVesting.getVestingSchedulesCountByBeneficiary(beneficiary2.address))
+        .to.be.equal(1);
+
+      // get schedule by address and index
+      const vesting_beneficiary1_0 = await tokenVesting.getVestingScheduleByAddressAndIndex(beneficiary1.address, 0);
+      expect(vesting_beneficiary1_0.beneficiary).to.be.equal(beneficiary1.address);
+      expect(vesting_beneficiary1_0.amountTotal).to.be.equal(amount1);
+      const vesting_beneficiary1_1 = await tokenVesting.getVestingScheduleByAddressAndIndex(beneficiary1.address, 1);
+      expect(vesting_beneficiary1_1.beneficiary).to.be.equal(beneficiary1.address);
+      expect(vesting_beneficiary1_1.amountTotal).to.be.equal(amount2);
+      const vesting_beneficiary2_0 = await tokenVesting.getVestingScheduleByAddressAndIndex(beneficiary2.address, 0);
+      expect(vesting_beneficiary2_0.beneficiary).to.be.equal(beneficiary2.address);
+      expect(vesting_beneficiary2_0.amountTotal).to.be.equal(amount1);
     });
 
     it("Should compute vesting schedule index", async function () {
@@ -297,6 +501,17 @@ describe("DYSVesting", function () {
           0
         )
       ).to.be.revertedWith("DYSVesting: amount must be > 0");
+      await expect(
+        tokenVesting.createVestingSchedule(
+          addr1.address,
+          time,
+          0,
+          1,
+          1,
+          false,
+          1001
+        )
+      ).to.be.revertedWith("DYSVesting: cannot create vesting schedule because not sufficient tokens");
     });
   });
 });
