@@ -38,7 +38,8 @@ module.exports = {
     },
     dysBeneficiary: {
       default: '0xFe3AC01fA715A09721266B9db1F9f60d0BF1BDbB',
-      hardhat: 0
+      hardhat: 0,
+      mainnet: '0x9Cc9F2a6C035Ce0d3Dc37013516f03cbe2127565'
     }
   },
   gasReporter: {
