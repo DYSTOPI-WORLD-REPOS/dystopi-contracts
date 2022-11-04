@@ -16,7 +16,9 @@
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.1.1",
     "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "@opengsn/contracts": "*",
     "@openzeppelin/contracts": "^4.7.3",
+    "@openzeppelin/contracts-upgradeable": "^4.7.3",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "dotenv": "^16.0.2",

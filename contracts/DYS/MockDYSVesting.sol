@@ -3,7 +3,7 @@
 // https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/contracts/MockTokenVesting.sol
 // released under the Apache-2.0 license
 // Original license: https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/LICENSE
-pragma solidity 0.8.4;
+pragma solidity ^0.8.4;
 
 import "./DYSVesting.sol";
 
