@@ -42,7 +42,7 @@ contract ERC721WithItemSeries is
     // itemId => itemSeriesId => ItemSeries
     mapping(uint => ItemSeries[]) public itemSeriesMap;
     // counter for auto-incremented ids
-    uint public lastOccupiedTokenId = 0;
+    uint public lastOccupiedTokenId;
 
     function initialize(
         string memory _name,
@@ -50,9 +50,11 @@ contract ERC721WithItemSeries is
         address admin,
         address pauser,
         address minter,
-        address itemAdmin
+        address itemAdmin,
+        string memory baseURI_
     ) initializer public {
         __ERC721_init(_name, _symbol);
+        __ERC721WithBaseUriUpgradeable_init(baseURI_);
         __Pausable_init();
 
         // can revoke and assign roles
@@ -60,6 +62,8 @@ contract ERC721WithItemSeries is
         _grantRole(PAUSER_ROLE, pauser);
         _grantRole(MINTER_ROLE, minter);
         _grantRole(ITEM_ADMIN_ROLE, itemAdmin);
+
+        lastOccupiedTokenId = 0;
     }
 
     function mint(

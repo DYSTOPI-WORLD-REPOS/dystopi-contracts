@@ -11,7 +11,7 @@
     "P2E",
     "Dystopi"
   ],
-  "author": "Huba Gaspar",
+  "author": "Dystopi World",
   "license": "MIT",
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.1.1",
