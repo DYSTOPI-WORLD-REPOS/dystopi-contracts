@@ -9,8 +9,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@opengsn/contracts/src/ERC2771Recipient.sol";
 import "./base/ERC721WithBaseUriUpgradeable.sol";
+import "./interfaces/IInGameItems.sol";
 
-contract ERC721WithItemSeries is
+contract InGameItems is
+    IInGameItems,
     Initializable,
     ERC721Upgradeable,
     ERC721BurnableUpgradeable,
@@ -26,23 +28,21 @@ contract ERC721WithItemSeries is
     // can configure items
     bytes32 public constant ITEM_ADMIN_ROLE = keccak256("ITEM_ADMIN_ROLE");
 
-    struct ItemSeries {
-        uint itemId;
-        uint startingTokenId;
-        uint editionSize;
-        uint minted;
-    }
-
-    struct ItemSeriesIn {
-        uint itemId;
-        uint itemSeriesId;
-        uint editionSize;
-    }
-
     // itemId => itemSeriesId => ItemSeries
     mapping(uint => ItemSeries[]) public itemSeriesMap;
+    // tokenId => itemId
+    mapping(uint => uint) tokenIdItemIdMap;
     // counter for auto-incremented ids
     uint public lastOccupiedTokenId;
+
+    event ItemSeriesAdded(
+        uint itemId,
+        uint itemSeriesId,
+        uint itemType,
+        uint slots,
+        uint startingTokenId,
+        uint editionSize
+    );
 
     function initialize(
         string memory _name,
@@ -51,6 +51,7 @@ contract ERC721WithItemSeries is
         address pauser,
         address minter,
         address itemAdmin,
+        address trustedForwarder_,
         string memory baseURI_
     ) initializer public {
         __ERC721_init(_name, _symbol);
@@ -63,28 +64,33 @@ contract ERC721WithItemSeries is
         _grantRole(MINTER_ROLE, minter);
         _grantRole(ITEM_ADMIN_ROLE, itemAdmin);
 
+        _setTrustedForwarder(trustedForwarder_);
+
         lastOccupiedTokenId = 0;
     }
 
     function mint(
+        address to,
         uint[] calldata itemIds,
         uint[] calldata itemSeriesIds,
         uint[] calldata amounts
-    ) external onlyRole(MINTER_ROLE) {
+    ) external override onlyRole(MINTER_ROLE) {
+        require(
+            itemIds.length == itemSeriesIds.length && itemIds.length == amounts.length,
+                "InGameItems: Array length mismatch"
+        );
         for (uint i = 0; i < itemIds.length; i++) {
-            require(
-                itemSeriesMap[itemIds[i]].length > itemSeriesIds[i],
-                "ERC721WithItemSeries: itemSeriesId out of range"
-            );
             ItemSeries storage currentItemSeries = itemSeriesMap[itemIds[i]][itemSeriesIds[i]];
             require(
                 currentItemSeries.minted + amounts[i] <= currentItemSeries.editionSize,
-                "ERC721WithItemSeries: Not enough tokens to mint from this series"
+                "InGameItems: Not enough tokens to mint from this series"
             );
 
             for (uint j = 0; j < amounts[i]; j++) {
+                uint tokenId = currentItemSeries.startingTokenId + currentItemSeries.minted;
+                tokenIdItemIdMap[tokenId] = currentItemSeries.itemId;
                 currentItemSeries.minted++;
-                _safeMint(_msgSender(), currentItemSeries.minted);
+                _safeMint(to, tokenId);
             }
         }
     }
@@ -93,19 +99,50 @@ contract ERC721WithItemSeries is
         for (uint i = 0; i < itemSeriesIn.length; i++) {
             ItemSeriesIn memory currentItemSeriesIn = itemSeriesIn[i];
             require(
-                itemSeriesMap[currentItemSeriesIn.itemId].length + 1 == currentItemSeriesIn.itemSeriesId,
-                "ERC721WithItemSeries: Item series ID mismatch"
+                itemSeriesMap[currentItemSeriesIn.itemId].length == currentItemSeriesIn.itemSeriesId,
+                "InGameItems: Item series ID mismatch"
             );
+            // check if previous series for this item had the same itemType and slots values
+            if (currentItemSeriesIn.itemSeriesId > 0) {
+                require(
+                    itemSeriesMap[currentItemSeriesIn.itemId][currentItemSeriesIn.itemSeriesId - 1].itemType == currentItemSeriesIn.itemType,
+                    "InGameItems: Item type mismatch"
+                );
+                require(
+                    itemSeriesMap[currentItemSeriesIn.itemId][currentItemSeriesIn.itemSeriesId - 1].slots == currentItemSeriesIn.slots,
+                    "InGameItems: Slots mismatch"
+                );
+            }
 
-            lastOccupiedTokenId++;
+            lastOccupiedTokenId += currentItemSeriesIn.editionSize;
 
             ItemSeries memory currentItemSeries;
-            currentItemSeries.startingTokenId = lastOccupiedTokenId;
+            currentItemSeries.startingTokenId = lastOccupiedTokenId - currentItemSeriesIn.editionSize + 1;
             currentItemSeries.editionSize = currentItemSeriesIn.editionSize;
             currentItemSeries.itemId = currentItemSeriesIn.itemId;
+            currentItemSeries.itemType = currentItemSeriesIn.itemType;
+            currentItemSeries.slots = currentItemSeriesIn.slots;
 
             itemSeriesMap[currentItemSeries.itemId].push(currentItemSeries);
+
+            emit ItemSeriesAdded(
+                currentItemSeries.itemId,
+                currentItemSeriesIn.itemSeriesId,
+                currentItemSeries.itemType,
+                currentItemSeries.slots,
+                currentItemSeries.startingTokenId,
+                currentItemSeries.editionSize
+            );
         }
+    }
+
+    function getItemSeries(uint itemId, uint itemSeriesId) external view override returns (ItemSeries memory) {
+        require(itemSeriesMap[itemId].length > 0, "InGameItems: itemId does not exist");
+        require(
+            itemSeriesMap[itemId].length > itemSeriesId,
+            "InGameItems: itemSeriesId out of range"
+        );
+        return itemSeriesMap[itemId][itemSeriesId];
     }
 
     function setBaseURI(string memory baseURI_) external onlyRole(ITEM_ADMIN_ROLE) {
@@ -118,6 +155,10 @@ contract ERC721WithItemSeries is
 
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
+    }
+
+    function setTrustedForwarder(address forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setTrustedForwarder(forwarder);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId)

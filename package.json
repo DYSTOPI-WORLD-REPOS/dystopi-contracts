@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@openzeppelin/hardhat-upgrades": "^1.21.0",
     "solidity-coverage": "^0.8.2"
   }
 }
