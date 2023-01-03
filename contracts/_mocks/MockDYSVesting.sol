@@ -5,7 +5,7 @@
 // Original license: https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/LICENSE
 pragma solidity ^0.8.4;
 
-import "./DYSVesting.sol";
+import "../DYS/DYSVesting.sol";
 
 /**
  * WARNING: use only for testing and debugging purpose

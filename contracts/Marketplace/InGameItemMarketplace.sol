@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@opengsn/contracts/src/ERC2771Recipient.sol";
 import "../NFT/interfaces/IInGameItems.sol";
 
 contract InGameItemMarketplace is
-    Initializable,
-    AccessControlUpgradeable,
-    PausableUpgradeable,
+    AccessControl,
+    Pausable,
     ERC2771Recipient
 {
-    using ECDSAUpgradeable for bytes32;
+    using ECDSA for bytes32;
 
     // can pause minting and transfers
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     // can configure items
     bytes32 public constant STORE_ADMIN_ROLE = keccak256("STORE_ADMIN_ROLE");
+    // able to withdraw funds
+    bytes32 public constant BENEFICIARY_ROLE = keccak256("BENEFICIARY_ROLE");
 
     struct ItemSeriesPricingIn {
         uint itemId;
@@ -48,45 +48,47 @@ contract InGameItemMarketplace is
     // signer for signature verification
     address internal _signer;
 
-    function initialize(
+    constructor(
         address admin,
         address pauser,
         address storeAdmin,
+        address beneficiary,
         address signer_,
-        address inGameItemsAddress
-    ) public initializer {
-        __Pausable_init();
-
+        address inGameItemsAddress,
+        address trustedForwarder_
+    ) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(PAUSER_ROLE, pauser);
         _grantRole(STORE_ADMIN_ROLE, storeAdmin);
+        _grantRole(BENEFICIARY_ROLE, beneficiary);
 
         _inGameItems = IInGameItems(inGameItemsAddress);
         _signer = signer_;
+        _setTrustedForwarder(trustedForwarder_);
     }
 
     function purchase(
         uint[] calldata itemIds,
         uint[] calldata itemSeriesIds,
-        uint[] calldata amounts,
+        uint[] calldata qtys,
         bytes32 nonce,
         bytes32 hash,
         bytes memory signature
     ) external payable whenNotPaused {
         require(
             matchAddressSigner(hash, signature),
-            "InGameItemMarketplace: Direct minting is not allowed"
+            "InGameItemMarketplace: Message was not signed by signer"
         );
         require(
             !_nonces[nonce],
             "InGameItemMarketplace: Nonce was already used"
         );
         require(
-            hashTransaction(_msgSender(), itemIds, itemSeriesIds, amounts, nonce) == hash,
+            hashTransaction(_msgSender(), itemIds, itemSeriesIds, qtys, nonce) == hash,
             "InGameItemMarketplace: Hash mismatch"
         );
         require(
-            itemIds.length == itemSeriesIds.length && itemIds.length == amounts.length,
+            itemIds.length == itemSeriesIds.length && itemIds.length == qtys.length,
             "InGameItemMarketplace: Array length mismatch"
         );
 
@@ -95,21 +97,24 @@ contract InGameItemMarketplace is
         address erc20Address = address(0);
 
         for (uint i = 0; i < itemIds.length; i++) {
-            require(amounts[i] > 0, "InGameItemMarketplace: Cannot purchase 0 tokens");
+            require(qtys[i] > 0, "InGameItemMarketplace: Cannot purchase 0 tokens");
 
             ItemSeriesPricing memory itemSeriesPricing = getItemSeriesPricing(itemIds[i], itemSeriesIds[i]);
 
+            // eth price takes precedence, if both are gt 0
             if (itemSeriesPricing.ethPrice > 0) {
-                ethPriceTotal += itemSeriesPricing.ethPrice * amounts[i];
+                ethPriceTotal += itemSeriesPricing.ethPrice * qtys[i];
             } else {
                 // in order for this to work optimally, itemSeries need to be ordered by erc20Address
-                if (erc20Address != itemSeriesPricing.erc20Address && erc20PriceTotal > 0) {
-                    IERC20(erc20Address).transferFrom(_msgSender(), address(this), erc20PriceTotal);
+                if (erc20Address != itemSeriesPricing.erc20Address) {
+                    if (erc20PriceTotal > 0) {
+                        IERC20(erc20Address).transferFrom(_msgSender(), address(this), erc20PriceTotal);
+                        erc20PriceTotal = 0;
+                    }
                     erc20Address = itemSeriesPricing.erc20Address;
-                    erc20PriceTotal = 0;
                 }
                 if (erc20Address == itemSeriesPricing.erc20Address) {
-                    erc20PriceTotal += itemSeriesPricing.erc20Price * amounts[i];
+                    erc20PriceTotal += itemSeriesPricing.erc20Price * qtys[i];
                 }
             }
         }
@@ -122,7 +127,7 @@ contract InGameItemMarketplace is
             IERC20(erc20Address).transferFrom(_msgSender(), address(this), erc20PriceTotal);
         }
 
-        _inGameItems.mint(_msgSender(), itemIds, itemSeriesIds, amounts);
+        _inGameItems.mint(_msgSender(), itemIds, itemSeriesIds, qtys);
     }
 
     function setupItemSeriesPricing(ItemSeriesPricingIn[] calldata itemSeriesPricingIn)
@@ -177,6 +182,14 @@ contract InGameItemMarketplace is
         _unpause();
     }
 
+    function setInGameItems(address inGameItemsAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _inGameItems = IInGameItems(inGameItemsAddress);
+    }
+
+    function setTrustedForwarder(address forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setTrustedForwarder(forwarder);
+    }
+
     function getItemSeriesPricing(uint itemId, uint itemSeriesId)
     public
     view
@@ -194,12 +207,12 @@ contract InGameItemMarketplace is
         address sender,
         uint[] calldata itemIds,
         uint[] calldata itemSeriesIds,
-        uint[] calldata amounts,
+        uint[] calldata qtys,
         bytes32 nonce
     ) internal pure returns(bytes32) {
         bytes32 hash = keccak256(abi.encodePacked(
                 "\x19Ethereum Signed Message:\n32",
-                keccak256(abi.encodePacked(sender, itemIds, itemSeriesIds, amounts, nonce)))
+                keccak256(abi.encodePacked(sender, itemIds, itemSeriesIds, qtys, nonce)))
         );
 
         return hash;
@@ -209,10 +222,18 @@ contract InGameItemMarketplace is
         return _signer == hash.recover(signature);
     }
 
+    function withdrawEth(uint amount) external onlyRole(BENEFICIARY_ROLE) {
+        payable(_msgSender()).transfer(amount);
+    }
+
+    function withdrawTokens(address tokenAddress, uint amount) external onlyRole(BENEFICIARY_ROLE) {
+        IERC20(tokenAddress).transfer(_msgSender(), amount);
+    }
+
     function _msgSender()
     internal
     view
-    override(ContextUpgradeable, ERC2771Recipient)
+    override(Context, ERC2771Recipient)
     returns (address)
     {
         return ERC2771Recipient._msgSender();
@@ -221,7 +242,7 @@ contract InGameItemMarketplace is
     function _msgData()
     internal
     view
-    override(ContextUpgradeable, ERC2771Recipient)
+    override(Context, ERC2771Recipient)
     returns (bytes calldata)
     {
         return ERC2771Recipient._msgData();

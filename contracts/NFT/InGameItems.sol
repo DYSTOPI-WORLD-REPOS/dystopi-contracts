@@ -73,20 +73,20 @@ contract InGameItems is
         address to,
         uint[] calldata itemIds,
         uint[] calldata itemSeriesIds,
-        uint[] calldata amounts
+        uint[] calldata qtys
     ) external override onlyRole(MINTER_ROLE) {
         require(
-            itemIds.length == itemSeriesIds.length && itemIds.length == amounts.length,
+            itemIds.length == itemSeriesIds.length && itemIds.length == qtys.length,
                 "InGameItems: Array length mismatch"
         );
         for (uint i = 0; i < itemIds.length; i++) {
             ItemSeries storage currentItemSeries = itemSeriesMap[itemIds[i]][itemSeriesIds[i]];
             require(
-                currentItemSeries.minted + amounts[i] <= currentItemSeries.editionSize,
+                currentItemSeries.minted + qtys[i] <= currentItemSeries.editionSize,
                 "InGameItems: Not enough tokens to mint from this series"
             );
 
-            for (uint j = 0; j < amounts[i]; j++) {
+            for (uint j = 0; j < qtys[i]; j++) {
                 uint tokenId = currentItemSeries.startingTokenId + currentItemSeries.minted;
                 tokenIdItemIdMap[tokenId] = currentItemSeries.itemId;
                 currentItemSeries.minted++;
