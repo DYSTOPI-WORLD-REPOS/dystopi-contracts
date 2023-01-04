@@ -1,12 +1,12 @@
-const { expect } = require("chai");
+const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
-const {keccak256, toUtf8Bytes} = ethers.utils;
+const { NULL_ADDRESS } = require('../utils/constants');
+const { keccak256, toUtf8Bytes } = ethers.utils;
 
-function randomIntFromInterval(min, max) { // min and max included
-  return Math.floor(Math.random() * (max - min + 1) + min)
+function randomIntFromInterval(min, max) {
+  // min and max included
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
-
-const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 describe('InGameItems', () => {
   let InGameItemsFactory;
@@ -25,7 +25,9 @@ describe('InGameItems', () => {
 
   const DEFAULT_ADMIN_ROLE = NULL_ADDRESS;
   const PAUSER_ROLE = keccak256(toUtf8Bytes('PAUSER_ROLE')).toLowerCase();
-  const ITEM_ADMIN_ROLE = keccak256(toUtf8Bytes('ITEM_ADMIN_ROLE')).toLowerCase();
+  const ITEM_ADMIN_ROLE = keccak256(
+    toUtf8Bytes('ITEM_ADMIN_ROLE')
+  ).toLowerCase();
   const MINTER_ROLE = keccak256(toUtf8Bytes('MINTER_ROLE')).toLowerCase();
 
   before(async () => {
@@ -33,7 +35,8 @@ describe('InGameItems', () => {
   });
 
   beforeEach(async () => {
-    [deployer, admin, pauser, minter, itemAdmin, user] = await ethers.getSigners();
+    [deployer, admin, pauser, minter, itemAdmin, user] =
+      await ethers.getSigners();
 
     inGameItems = await upgrades.deployProxy(InGameItemsFactory, [
       'Dystopi In Game Item NFTs',
@@ -69,7 +72,7 @@ describe('InGameItems', () => {
     }
     await inGameItemsItemAdmin.setupItemSeries(itemSeriesIn);
     return itemSeriesIn;
-  }
+  };
 
   describe('setupItemSeries', () => {
     it('successfully sets up itemSeries for new items', async () => {
@@ -83,18 +86,30 @@ describe('InGameItems', () => {
           currentItemSeriesIn.itemSeriesId
         );
 
-        expect(currentItemSeries.itemId.toNumber()).to.be.equal(currentItemSeriesIn.itemId);
-        expect(currentItemSeries.itemType.toNumber()).to.be.equal(currentItemSeriesIn.itemType);
-        expect(currentItemSeries.slots.toNumber()).to.be.equal(currentItemSeriesIn.slots);
-        expect(currentItemSeries.editionSize.toNumber()).to.be.equal(currentItemSeriesIn.editionSize);
+        expect(currentItemSeries.itemId.toNumber()).to.be.equal(
+          currentItemSeriesIn.itemId
+        );
+        expect(currentItemSeries.itemType.toNumber()).to.be.equal(
+          currentItemSeriesIn.itemType
+        );
+        expect(currentItemSeries.slots.toNumber()).to.be.equal(
+          currentItemSeriesIn.slots
+        );
+        expect(currentItemSeries.editionSize.toNumber()).to.be.equal(
+          currentItemSeriesIn.editionSize
+        );
         expect(currentItemSeries.minted.toNumber()).to.be.equal(0);
-        expect(currentItemSeries.startingTokenId.toNumber()).to.be.equal(lastOccupiedTokenIdCalculated + 1);
+        expect(currentItemSeries.startingTokenId.toNumber()).to.be.equal(
+          lastOccupiedTokenIdCalculated + 1
+        );
 
         lastOccupiedTokenIdCalculated += currentItemSeriesIn.editionSize;
       }
 
       // lastOccupiedTokenId is updated
-      const lastOccupiedTokenId = (await inGameItems.lastOccupiedTokenId()).toNumber();
+      const lastOccupiedTokenId = (
+        await inGameItems.lastOccupiedTokenId()
+      ).toNumber();
       expect(lastOccupiedTokenId).to.be.equal(lastOccupiedTokenIdCalculated);
     });
 
@@ -108,10 +123,15 @@ describe('InGameItems', () => {
           currentItemSeriesIn.itemType,
           currentItemSeriesIn.slots
         );
-        const promise = await inGameItemsItemAdmin.setupItemSeries([newSeriesIn]);
+        const promise = await inGameItemsItemAdmin.setupItemSeries([
+          newSeriesIn
+        ]);
         await promise;
 
-        const currentItemSeries = await inGameItems.getItemSeries(newSeriesIn.itemId, newSeriesIn.itemSeriesId);
+        const currentItemSeries = await inGameItems.getItemSeries(
+          newSeriesIn.itemId,
+          newSeriesIn.itemSeriesId
+        );
 
         await expect(promise)
           .to.emit(inGameItems, 'ItemSeriesAdded')
@@ -124,32 +144,43 @@ describe('InGameItems', () => {
             currentItemSeries.editionSize.toNumber()
           );
 
-        expect(currentItemSeries.itemId.toNumber()).to.be.equal(newSeriesIn.itemId);
-        expect(currentItemSeries.itemType.toNumber()).to.be.equal(newSeriesIn.itemType);
-        expect(currentItemSeries.slots.toNumber()).to.be.equal(newSeriesIn.slots);
-        expect(currentItemSeries.editionSize.toNumber()).to.be.equal(newSeriesIn.editionSize);
+        expect(currentItemSeries.itemId.toNumber()).to.be.equal(
+          newSeriesIn.itemId
+        );
+        expect(currentItemSeries.itemType.toNumber()).to.be.equal(
+          newSeriesIn.itemType
+        );
+        expect(currentItemSeries.slots.toNumber()).to.be.equal(
+          newSeriesIn.slots
+        );
+        expect(currentItemSeries.editionSize.toNumber()).to.be.equal(
+          newSeriesIn.editionSize
+        );
         expect(currentItemSeries.minted.toNumber()).to.be.equal(0);
       }
     });
 
     it('fails without access', async () => {
       const seriesIn = generateRandomItemSeries(1, 0);
-      await expect(inGameItems.setupItemSeries([seriesIn]))
-        .to.be.revertedWith(`AccessControl: account ${deployer.address.toLowerCase()} is missing role ${ITEM_ADMIN_ROLE}`);
+      await expect(inGameItems.setupItemSeries([seriesIn])).to.be.revertedWith(
+        `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${ITEM_ADMIN_ROLE}`
+      );
     });
 
     it('fails when itemSeriesId is not matching', async () => {
       const seriesIn1_1 = generateRandomItemSeries(1, 1);
 
-      await expect(inGameItemsItemAdmin.setupItemSeries([seriesIn1_1]))
-        .to.be.revertedWith('InGameItems: Item series ID mismatch');
+      await expect(
+        inGameItemsItemAdmin.setupItemSeries([seriesIn1_1])
+      ).to.be.revertedWith('InGameItems: Item series ID mismatch');
 
       const seriesIn2_0 = generateRandomItemSeries(2, 0);
       const seriesIn2_2 = generateRandomItemSeries(2, 2);
 
       await inGameItemsItemAdmin.setupItemSeries([seriesIn2_0]);
-      await expect(inGameItemsItemAdmin.setupItemSeries([seriesIn2_2]))
-        .to.be.revertedWith('InGameItems: Item series ID mismatch');
+      await expect(
+        inGameItemsItemAdmin.setupItemSeries([seriesIn2_2])
+      ).to.be.revertedWith('InGameItems: Item series ID mismatch');
     });
 
     it('fails if itemType or slots is not matching', async () => {
@@ -164,8 +195,9 @@ describe('InGameItems', () => {
         seriesIn.slots
       );
 
-      await expect(inGameItemsItemAdmin.setupItemSeries([seriesInWrongItemType]))
-        .to.be.revertedWith('InGameItems: Item type mismatch');
+      await expect(
+        inGameItemsItemAdmin.setupItemSeries([seriesInWrongItemType])
+      ).to.be.revertedWith('InGameItems: Item type mismatch');
 
       const seriesInWrongSlots = generateRandomItemSeries(
         1,
@@ -174,8 +206,9 @@ describe('InGameItems', () => {
         seriesIn.slots + 1
       );
 
-      await expect(inGameItemsItemAdmin.setupItemSeries([seriesInWrongSlots]))
-        .to.be.revertedWith('InGameItems: Slots mismatch');
+      await expect(
+        inGameItemsItemAdmin.setupItemSeries([seriesInWrongSlots])
+      ).to.be.revertedWith('InGameItems: Slots mismatch');
     });
   });
 
@@ -183,7 +216,14 @@ describe('InGameItems', () => {
     it('mints 1 of 1 series', async () => {
       const seriesIn = await addRandomItems();
 
-      await expect(inGameItemsMinter.mint(user.address, [seriesIn[0].itemId], [seriesIn[0].itemSeriesId], [1]))
+      await expect(
+        inGameItemsMinter.mint(
+          user.address,
+          [seriesIn[0].itemId],
+          [seriesIn[0].itemSeriesId],
+          [1]
+        )
+      )
         .to.emit(inGameItemsMinter, 'Transfer')
         .withArgs(NULL_ADDRESS, user.address, 1);
     });
@@ -201,7 +241,12 @@ describe('InGameItems', () => {
         amounts.push(5);
       }
 
-      await inGameItemsMinter.mint(user.address, itemIds, itemSeriesIds, amounts);
+      await inGameItemsMinter.mint(
+        user.address,
+        itemIds,
+        itemSeriesIds,
+        amounts
+      );
 
       const userBalance = await inGameItemsUser.balanceOf(user.address);
 
@@ -213,28 +258,58 @@ describe('InGameItems', () => {
 
       let currentSeriesIn = seriesIn[0];
 
-      await inGameItemsMinter.mint(user.address, [currentSeriesIn.itemId], [currentSeriesIn.itemSeriesId], [currentSeriesIn.editionSize]);
+      await inGameItemsMinter.mint(
+        user.address,
+        [currentSeriesIn.itemId],
+        [currentSeriesIn.itemSeriesId],
+        [currentSeriesIn.editionSize]
+      );
 
-      await expect(inGameItemsMinter.mint(user.address, [currentSeriesIn.itemId], [currentSeriesIn.itemSeriesId], [1]))
-        .to.be.revertedWith('InGameItems: Not enough tokens to mint from this series');
+      await expect(
+        inGameItemsMinter.mint(
+          user.address,
+          [currentSeriesIn.itemId],
+          [currentSeriesIn.itemSeriesId],
+          [1]
+        )
+      ).to.be.revertedWith(
+        'InGameItems: Not enough tokens to mint from this series'
+      );
 
-      const currentItemSeries = await inGameItems.getItemSeries(currentSeriesIn.itemId, currentSeriesIn.itemSeriesId);
-      expect(currentItemSeries.minted.toNumber()).to.be.equal(currentSeriesIn.editionSize);
+      const currentItemSeries = await inGameItems.getItemSeries(
+        currentSeriesIn.itemId,
+        currentSeriesIn.itemSeriesId
+      );
+      expect(currentItemSeries.minted.toNumber()).to.be.equal(
+        currentSeriesIn.editionSize
+      );
 
       currentSeriesIn = seriesIn[1];
 
-      await expect(inGameItemsMinter.mint(user.address, [currentSeriesIn.itemId], [currentSeriesIn.itemSeriesId], [currentSeriesIn.editionSize + 1]))
-        .to.be.revertedWith('InGameItems: Not enough tokens to mint from this series');
+      await expect(
+        inGameItemsMinter.mint(
+          user.address,
+          [currentSeriesIn.itemId],
+          [currentSeriesIn.itemSeriesId],
+          [currentSeriesIn.editionSize + 1]
+        )
+      ).to.be.revertedWith(
+        'InGameItems: Not enough tokens to mint from this series'
+      );
     });
 
     it('cannot mint with differing itemId, itemSeriesId, and amounts arrays', async () => {
-      await expect(inGameItemsMinter.mint(user.address, [1, 2], [0], [1]))
-        .to.be.revertedWith('InGameItems: Array length mismatch');
+      await expect(
+        inGameItemsMinter.mint(user.address, [1, 2], [0], [1])
+      ).to.be.revertedWith('InGameItems: Array length mismatch');
     });
 
     it('cannot mint without access', async () => {
-      await expect(inGameItems.mint(user.address, [1], [0], [1]))
-        .to.be.revertedWith(`AccessControl: account ${deployer.address.toLowerCase()} is missing role ${MINTER_ROLE}`);
+      await expect(
+        inGameItems.mint(user.address, [1], [0], [1])
+      ).to.be.revertedWith(
+        `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${MINTER_ROLE}`
+      );
     });
   });
 
@@ -248,7 +323,12 @@ describe('InGameItems', () => {
 
       const currentSeriesIn = seriesIn[0];
 
-      await inGameItemsMinter.mint(user.address, [currentSeriesIn.itemId], [currentSeriesIn.itemSeriesId], [1]);
+      await inGameItemsMinter.mint(
+        user.address,
+        [currentSeriesIn.itemId],
+        [currentSeriesIn.itemSeriesId],
+        [1]
+      );
 
       const tokenURI = await inGameItems.tokenURI(1);
 
@@ -258,8 +338,9 @@ describe('InGameItems', () => {
     it('fails without access', async () => {
       const baseURI = 'https://lol.com/nft/';
 
-      await expect(inGameItems.setBaseURI(baseURI))
-        .to.be.revertedWith(`AccessControl: account ${deployer.address.toLowerCase()} is missing role ${ITEM_ADMIN_ROLE}`);
+      await expect(inGameItems.setBaseURI(baseURI)).to.be.revertedWith(
+        `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${ITEM_ADMIN_ROLE}`
+      );
     });
   });
 
@@ -271,17 +352,29 @@ describe('InGameItems', () => {
 
       await inGameItemsPauser.pause();
 
-      await expect(inGameItemsMinter.mint(user.address, [currentSeriesIn.itemId], [currentSeriesIn.itemSeriesId], [1]))
-        .to.be.revertedWith('Pausable: paused');
+      await expect(
+        inGameItemsMinter.mint(
+          user.address,
+          [currentSeriesIn.itemId],
+          [currentSeriesIn.itemSeriesId],
+          [1]
+        )
+      ).to.be.revertedWith('Pausable: paused');
 
       await inGameItemsPauser.unpause();
 
-      await inGameItemsMinter.mint(user.address, [currentSeriesIn.itemId], [currentSeriesIn.itemSeriesId], [1]);
+      await inGameItemsMinter.mint(
+        user.address,
+        [currentSeriesIn.itemId],
+        [currentSeriesIn.itemSeriesId],
+        [1]
+      );
     });
 
     it('fails without access', async () => {
-      await expect(inGameItems.pause())
-        .to.be.revertedWith(`AccessControl: account ${deployer.address.toLowerCase()} is missing role ${PAUSER_ROLE}`);
+      await expect(inGameItems.pause()).to.be.revertedWith(
+        `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${PAUSER_ROLE}`
+      );
     });
   });
 
@@ -289,8 +382,11 @@ describe('InGameItems', () => {
     it('can set trustedForwarder with access', async () => {
       await inGameItemsAdmin.setTrustedForwarder(user.address);
 
-      await expect(inGameItems.setTrustedForwarder(deployer.address))
-        .to.be.revertedWith(`AccessControl: account ${deployer.address.toLowerCase()} is missing role ${DEFAULT_ADMIN_ROLE}`);
+      await expect(
+        inGameItems.setTrustedForwarder(deployer.address)
+      ).to.be.revertedWith(
+        `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${DEFAULT_ADMIN_ROLE}`
+      );
     });
   });
 });

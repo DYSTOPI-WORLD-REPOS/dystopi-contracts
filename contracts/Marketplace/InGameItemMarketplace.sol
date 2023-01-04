@@ -107,7 +107,7 @@ contract InGameItemMarketplace is
             } else {
                 // in order for this to work optimally, itemSeries need to be ordered by erc20Address
                 if (erc20Address != itemSeriesPricing.erc20Address) {
-                    if (erc20PriceTotal > 0) {
+                    if (erc20PriceTotal > 0 && erc20Address != address(0)) {
                         IERC20(erc20Address).transferFrom(_msgSender(), address(this), erc20PriceTotal);
                         erc20PriceTotal = 0;
                     }
@@ -123,7 +123,7 @@ contract InGameItemMarketplace is
 
         _nonces[nonce] = true;
 
-        if (erc20PriceTotal > 0) {
+        if (erc20PriceTotal > 0 && erc20Address != address(0)) {
             IERC20(erc20Address).transferFrom(_msgSender(), address(this), erc20PriceTotal);
         }
 
@@ -138,7 +138,7 @@ contract InGameItemMarketplace is
             ItemSeriesPricingIn memory currentItemSeriesPricingIn = itemSeriesPricingIn[i];
             ItemSeriesPricing[] storage itemSeriesForItemId = itemSeriesPricingMap[currentItemSeriesPricingIn.itemId];
             require(
-                itemSeriesForItemId.length <= currentItemSeriesPricingIn.itemSeriesId,
+                itemSeriesForItemId.length >= currentItemSeriesPricingIn.itemSeriesId,
                 "InGameItemMarketplace: Item series ID mismatch"
             );
             require(
@@ -182,12 +182,24 @@ contract InGameItemMarketplace is
         _unpause();
     }
 
+    function signer() external view returns (address) {
+        return _signer;
+    }
+
     function setInGameItems(address inGameItemsAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _inGameItems = IInGameItems(inGameItemsAddress);
     }
 
     function setTrustedForwarder(address forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _setTrustedForwarder(forwarder);
+    }
+
+    function setSigner(address signer_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _signer = signer_;
+    }
+
+    function getItemSeriesPricingLength(uint itemId) external view returns (uint) {
+        return itemSeriesPricingMap[itemId].length;
     }
 
     function getItemSeriesPricing(uint itemId, uint itemSeriesId)
