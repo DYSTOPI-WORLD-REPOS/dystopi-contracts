@@ -182,8 +182,12 @@ contract InGameItemMarketplace is
         _unpause();
     }
 
-    function signer() external view returns (address) {
-        return _signer;
+    function withdrawEth(uint amount) external onlyRole(BENEFICIARY_ROLE) {
+        payable(_msgSender()).transfer(amount);
+    }
+
+    function withdrawErc20(address tokenAddress, uint amount) external onlyRole(BENEFICIARY_ROLE) {
+        IERC20(tokenAddress).transfer(_msgSender(), amount);
     }
 
     function setInGameItems(address inGameItemsAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -196,6 +200,14 @@ contract InGameItemMarketplace is
 
     function setSigner(address signer_) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _signer = signer_;
+    }
+
+    function getSigner() external view returns (address) {
+        return _signer;
+    }
+
+    function getInGameItems() external view returns (address) {
+        return address(_inGameItems);
     }
 
     function getItemSeriesPricingLength(uint itemId) external view returns (uint) {
@@ -232,14 +244,6 @@ contract InGameItemMarketplace is
 
     function matchAddressSigner(bytes32 hash, bytes memory signature) internal view returns(bool) {
         return _signer == hash.recover(signature);
-    }
-
-    function withdrawEth(uint amount) external onlyRole(BENEFICIARY_ROLE) {
-        payable(_msgSender()).transfer(amount);
-    }
-
-    function withdrawTokens(address tokenAddress, uint amount) external onlyRole(BENEFICIARY_ROLE) {
-        IERC20(tokenAddress).transfer(_msgSender(), amount);
     }
 
     function _msgSender()

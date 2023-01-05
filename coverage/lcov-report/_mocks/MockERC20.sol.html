@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Code coverage report for DYS/DYSToken.sol</title>
+    <title>Code coverage report for _mocks/MockERC20.sol</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -16,7 +16,7 @@
 <div class='wrapper'>
   <div class='pad1'>
     <h1>
-      <a href="../index.html">all files</a> / <a href="index.html">DYS/</a> DYSToken.sol
+      <a href="../index.html">all files</a> / <a href="index.html">_mocks/</a> MockERC20.sol
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
@@ -53,14 +53,24 @@
 8
 9
 10
-11</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+11
+12
+13
+14
+15
+16</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">27×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">186×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
@@ -68,8 +78,13 @@ pragma solidity ^0.8.4;
 &nbsp;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 &nbsp;
-contract DYSToken is ERC20 {
-    constructor(address beneficiary, uint totalSupply_) ERC20("DYSEUM Token", "DYS") {
+contract MockERC20 is ERC20 {
+    constructor(
+        string memory name,
+        string memory symbol,
+        address beneficiary,
+        uint totalSupply_
+    ) ERC20(name, symbol) {
         _mint(beneficiary, totalSupply_ * 10 ** decimals());
     }
 }

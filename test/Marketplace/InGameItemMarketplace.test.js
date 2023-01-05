@@ -3,7 +3,8 @@ const { ethers, upgrades } = require('hardhat');
 const {
   NULL_ADDRESS,
   mockSigner,
-  mockPrivateKey
+  mockPrivateKey,
+  mockPrivateKey2
 } = require('../utils/constants');
 const { keccak256, toUtf8Bytes } = ethers.utils;
 const Web3 = require('web3');
@@ -96,7 +97,13 @@ const addSeriesToItemsAndMarketplace = async (
   return [inGameItemsSeries, inGameItemMarketplaceSeries];
 };
 
-const createPurchaseParams = (sender, itemIds, itemSeriesIds, qtys) => {
+const createPurchaseParams = (
+  sender,
+  itemIds,
+  itemSeriesIds,
+  qtys,
+  privateKey = mockPrivateKey
+) => {
   const nonce = ethers.utils.hexlify(ethers.utils.randomBytes(32));
 
   const hash = web3.utils.soliditySha3Raw(
@@ -106,10 +113,7 @@ const createPurchaseParams = (sender, itemIds, itemSeriesIds, qtys) => {
     { type: 'uint256[]', value: qtys },
     { type: 'bytes32', value: nonce }
   );
-  const { signature, messageHash } = web3.eth.accounts.sign(
-    hash,
-    mockPrivateKey
-  );
+  const { signature, messageHash } = web3.eth.accounts.sign(hash, privateKey);
   return [itemIds, itemSeriesIds, qtys, nonce, messageHash, signature];
 };
 
@@ -128,6 +132,8 @@ describe('InGameItemMarketplace', () => {
   let inGameItemMarketplaceBeneficiary;
   let inGameItemMarketplaceStoreAdmin;
   let inGameItemMarketplaceUser;
+  let inGameItemMarketplaceSeries;
+  let inGameItemsSeries;
   let deployer;
   let admin;
   let pauser;
@@ -219,18 +225,18 @@ describe('InGameItemMarketplace', () => {
     await erc20_2
       .connect(user)
       .approve(inGameItemMarketplace.address, ethers.constants.MaxUint256);
+
+    [inGameItemsSeries, inGameItemMarketplaceSeries] =
+      await addSeriesToItemsAndMarketplace(
+        inGameItemsItemAdmin,
+        inGameItemMarketplaceStoreAdmin,
+        erc20_1,
+        erc20_2
+      );
   });
 
   describe('purchase', () => {
     it('should purchase one with only ETH', async () => {
-      const [_, inGameItemMarketplaceSeries] =
-        await addSeriesToItemsAndMarketplace(
-          inGameItemsItemAdmin,
-          inGameItemMarketplaceStoreAdmin,
-          erc20_1,
-          erc20_2
-        );
-
       await expect(() =>
         inGameItemMarketplaceUser.purchase(
           ...createPurchaseParams(
@@ -259,14 +265,6 @@ describe('InGameItemMarketplace', () => {
     });
 
     it('should purchase one with only ERC20', async () => {
-      const [_, inGameItemMarketplaceSeries] =
-        await addSeriesToItemsAndMarketplace(
-          inGameItemsItemAdmin,
-          inGameItemMarketplaceStoreAdmin,
-          erc20_1,
-          erc20_2
-        );
-
       await expect(() =>
         inGameItemMarketplaceUser.purchase(
           ...createPurchaseParams(
@@ -289,18 +287,202 @@ describe('InGameItemMarketplace', () => {
 
       expect(await inGameItems.balanceOf(user.address)).to.equal(1);
     });
+
+    it('should purchase several with both ETH and ERC20', async () => {
+      const ethSpent = ethers.BigNumber.from(
+        inGameItemMarketplaceSeries[2].ethPrice
+      )
+        .mul(2)
+        .add(
+          ethers.BigNumber.from(inGameItemMarketplaceSeries[3].ethPrice).mul(2)
+        );
+
+      const spent1 = ethers.BigNumber.from(
+        inGameItemMarketplaceSeries[0].erc20Price
+      ).mul(2);
+
+      const spent2 = ethers.BigNumber.from(
+        inGameItemMarketplaceSeries[1].erc20Price
+      ).mul(2);
+
+      const func = () =>
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(
+            user.address,
+            [
+              inGameItemMarketplaceSeries[0].itemId,
+              inGameItemMarketplaceSeries[1].itemId,
+              inGameItemMarketplaceSeries[2].itemId,
+              inGameItemMarketplaceSeries[3].itemId
+            ],
+            [
+              inGameItemMarketplaceSeries[0].itemSeriesId,
+              inGameItemMarketplaceSeries[1].itemSeriesId,
+              inGameItemMarketplaceSeries[2].itemSeriesId,
+              inGameItemMarketplaceSeries[3].itemSeriesId
+            ],
+            [2, 2, 2, 2]
+          ),
+          {
+            value: ethSpent
+          }
+        );
+
+      await expect(func).changeEtherBalances(
+        [user, inGameItemMarketplace],
+        [ethSpent.mul(-1), ethSpent]
+      );
+
+      await expect(func).changeTokenBalances(
+        erc20_1,
+        [user, inGameItemMarketplace],
+        [spent1.mul(-1), spent1]
+      );
+
+      await expect(func).changeTokenBalances(
+        erc20_2,
+        [user, inGameItemMarketplace],
+        [spent2.mul(-1), spent2]
+      );
+
+      await expect(func).changeTokenBalance(inGameItems, user, 8);
+    });
+
+    it('should revert if the user does not have enough ETH', async () => {
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(
+            user.address,
+            [inGameItemMarketplaceSeries[2].itemId],
+            [inGameItemMarketplaceSeries[2].itemSeriesId],
+            [1]
+          ),
+          {
+            value: ethers.BigNumber.from(
+              inGameItemMarketplaceSeries[2].ethPrice
+            ).sub(1)
+          }
+        )
+      ).to.be.revertedWith('InGameItemMarketplace: ETH price mismatch');
+    });
+
+    it('should revert if the user does not have enough ERC20', async () => {
+      inGameItemMarketplaceSeries[0].erc20Price = web3.utils.toWei(
+        '100000000000000000000000000000',
+        'ether'
+      );
+      inGameItemMarketplaceStoreAdmin.setupItemSeriesPricing(
+        inGameItemMarketplaceSeries
+      );
+
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(
+            user.address,
+            [inGameItemMarketplaceSeries[0].itemId],
+            [inGameItemMarketplaceSeries[0].itemSeriesId],
+            [1]
+          )
+        )
+      ).to.be.revertedWith('ERC20: transfer amount exceeds balance');
+    });
+
+    it('should revert if trying to purchase 0 tokens', async () => {
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(
+            user.address,
+            [inGameItemMarketplaceSeries[0].itemId],
+            [inGameItemMarketplaceSeries[0].itemSeriesId],
+            [0]
+          )
+        )
+      ).to.be.revertedWith('InGameItemMarketplace: Cannot purchase 0 tokens');
+    });
+
+    it('should revert if array length mismatch', async () => {
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(
+            user.address,
+            [inGameItemMarketplaceSeries[0].itemId],
+            [inGameItemMarketplaceSeries[0].itemSeriesId],
+            [1, 1]
+          )
+        )
+      ).to.be.revertedWith('InGameItemMarketplace: Array length mismatch');
+    });
+
+    it('should revert if message was not signed by signer', async () => {
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(
+            user.address,
+            [inGameItemMarketplaceSeries[0].itemId],
+            [inGameItemMarketplaceSeries[0].itemSeriesId],
+            [1],
+            mockPrivateKey2
+          )
+        )
+      ).to.be.revertedWith(
+        'InGameItemMarketplace: Message was not signed by signer'
+      );
+    });
+
+    it('should revert if nonce was already used', async () => {
+      const params = createPurchaseParams(
+        user.address,
+        [inGameItemMarketplaceSeries[0].itemId],
+        [inGameItemMarketplaceSeries[0].itemSeriesId],
+        [1]
+      );
+
+      await inGameItemMarketplaceUser.purchase(...params);
+
+      await expect(
+        inGameItemMarketplaceUser.purchase(...params)
+      ).to.be.revertedWith('InGameItemMarketplace: Nonce was already used');
+    });
+
+    it('should revert if hash mismatch', async () => {
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(NULL_ADDRESS, [1], [0], [1])
+        )
+      ).to.be.revertedWith('InGameItemMarketplace: Hash mismatch');
+    });
+
+    it('should revert if paused', async () => {
+      await inGameItemMarketplacePauser.pause();
+
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(user.address, [1], [0], [1])
+        )
+      ).to.be.revertedWith('Pausable: paused');
+
+      await inGameItemMarketplacePauser.unpause();
+
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(user.address, [1], [0], [1])
+        )
+      ).to.not.be.reverted;
+    });
+
+    it('should revert if item series Id out of bounds', async () => {
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(user.address, [20], [0], [1])
+        )
+      ).to.be.revertedWith(
+        'InGameItemMarketplace: Item series ID out of bounds'
+      );
+    });
   });
 
   describe('setupItemSeriesPricing', () => {
     it('should add series to the marketplace', async () => {
-      const [_, inGameItemMarketplaceSeries] =
-        await addSeriesToItemsAndMarketplace(
-          inGameItemsItemAdmin,
-          inGameItemMarketplaceStoreAdmin,
-          erc20_1,
-          erc20_2
-        );
-
       for (const series of inGameItemMarketplaceSeries) {
         const itemSeries = await inGameItemMarketplace.getItemSeriesPricing(
           series.itemId,
@@ -314,15 +496,8 @@ describe('InGameItemMarketplace', () => {
         ]);
       }
     });
-    it('should revert if trying to add series with invalid series id', async () => {
-      const [_, inGameItemMarketplaceSeries] =
-        await addSeriesToItemsAndMarketplace(
-          inGameItemsItemAdmin,
-          inGameItemMarketplaceStoreAdmin,
-          erc20_1,
-          erc20_2
-        );
 
+    it('should revert if trying to add series with invalid series id', async () => {
       inGameItemMarketplaceSeries[1].itemSeriesId = 3;
       await expect(
         inGameItemMarketplaceStoreAdmin.setupItemSeriesPricing(
@@ -330,15 +505,8 @@ describe('InGameItemMarketplace', () => {
         )
       ).to.be.revertedWith('InGameItemMarketplace: Item series ID mismatch');
     });
-    it('should revert if trying to add series with invalid price config', async () => {
-      const [_, inGameItemMarketplaceSeries] =
-        await addSeriesToItemsAndMarketplace(
-          inGameItemsItemAdmin,
-          inGameItemMarketplaceStoreAdmin,
-          erc20_1,
-          erc20_2
-        );
 
+    it('should revert if trying to add series with invalid price config', async () => {
       inGameItemMarketplaceSeries[0].erc20Price = 0;
       inGameItemMarketplaceSeries[0].ethPrice = 0;
       await expect(
@@ -349,18 +517,18 @@ describe('InGameItemMarketplace', () => {
         'InGameItemMarketplace: Price must be defined in either an ERC20 or ETH'
       );
     });
+
+    it('should revert if not store admin', async () => {
+      await expect(
+        inGameItemMarketplaceUser.setupItemSeriesPricing([])
+      ).to.be.revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${STORE_ADMIN_ROLE}`
+      );
+    });
   });
 
   describe('activateItemSeries', () => {
     it('should deactivate a list of item series than activates them again', async () => {
-      const [_, inGameItemMarketplaceSeries] =
-        await addSeriesToItemsAndMarketplace(
-          inGameItemsItemAdmin,
-          inGameItemMarketplaceStoreAdmin,
-          erc20_1,
-          erc20_2
-        );
-
       await inGameItemMarketplaceStoreAdmin.activateItemSeries(
         false,
         inGameItemMarketplaceSeries.map((s) => s.itemId),
@@ -398,6 +566,149 @@ describe('InGameItemMarketplace', () => {
           [1, 2]
         )
       ).to.be.revertedWith('InGameItemMarketplace: Array length mismatch');
+    });
+
+    it('should revert if not store admin', async () => {
+      await expect(
+        inGameItemMarketplaceUser.activateItemSeries(true, [1], [1])
+      ).to.be.revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${STORE_ADMIN_ROLE}`
+      );
+    });
+  });
+
+  describe('withdrawEth', () => {
+    it('should withdraw ETH from the contract for beneficiary', async () => {
+      const params = createPurchaseParams(
+        user.address,
+        [inGameItemMarketplaceSeries[2].itemId],
+        [inGameItemMarketplaceSeries[2].itemSeriesId],
+        [1]
+      );
+
+      await inGameItemMarketplaceUser.purchase(...params, {
+        value: inGameItemMarketplaceSeries[2].ethPrice
+      });
+
+      const balance = await ethers.provider.getBalance(
+        inGameItemMarketplace.address
+      );
+
+      await expect(() =>
+        inGameItemMarketplaceBeneficiary.withdrawEth(balance)
+      ).changeEtherBalances(
+        [beneficiary, inGameItemMarketplaceUser],
+        [
+          ethers.BigNumber.from(inGameItemMarketplaceSeries[2].ethPrice),
+          ethers.BigNumber.from(inGameItemMarketplaceSeries[2].ethPrice).mul(-1)
+        ]
+      );
+    });
+
+    it('should revert if sender is not beneficiary', async () => {
+      await expect(inGameItemMarketplaceUser.withdrawEth(1)).to.be.revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${BENEFICIARY_ROLE}`
+      );
+    });
+  });
+
+  describe('withdrawErc20', () => {
+    it('should withdraw ERC20 from the contract for beneficiary', async () => {
+      const params = createPurchaseParams(
+        user.address,
+        [inGameItemMarketplaceSeries[0].itemId],
+        [inGameItemMarketplaceSeries[0].itemSeriesId],
+        [1]
+      );
+
+      await inGameItemMarketplaceUser.purchase(...params);
+
+      const balance = await erc20_1.balanceOf(inGameItemMarketplace.address);
+
+      await expect(() =>
+        inGameItemMarketplaceBeneficiary.withdrawErc20(erc20_1.address, balance)
+      ).changeTokenBalances(
+        erc20_1,
+        [beneficiary, inGameItemMarketplaceUser],
+        [
+          ethers.BigNumber.from(inGameItemMarketplaceSeries[0].erc20Price),
+          ethers.BigNumber.from(inGameItemMarketplaceSeries[0].erc20Price).mul(
+            -1
+          )
+        ]
+      );
+    });
+
+    it('should revert if sender is not beneficiary', async () => {
+      await expect(
+        inGameItemMarketplaceUser.withdrawErc20(erc20_1.address, 1)
+      ).to.be.revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${BENEFICIARY_ROLE}`
+      );
+    });
+  });
+
+  describe('setSigner', () => {
+    it('should set signer', async () => {
+      await inGameItemMarketplaceAdmin.setSigner(user.address);
+      expect(await inGameItemMarketplace.getSigner()).to.equal(user.address);
+    });
+
+    it('should revert if not default admin', async () => {
+      await expect(
+        inGameItemMarketplaceUser.setSigner(user.address)
+      ).to.be.revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${DEFAULT_ADMIN_ROLE}`
+      );
+    });
+  });
+
+  describe('setTrustedForwarder', () => {
+    it('should set trusted forwarder', async () => {
+      await inGameItemMarketplaceAdmin.setTrustedForwarder(user.address);
+      expect(await inGameItemMarketplace.getTrustedForwarder()).to.equal(
+        user.address
+      );
+    });
+
+    it('should revert if not default admin', async () => {
+      await expect(
+        inGameItemMarketplaceUser.setTrustedForwarder(user.address)
+      ).to.be.revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${DEFAULT_ADMIN_ROLE}`
+      );
+    });
+  });
+
+  describe('setInGameItems', () => {
+    it('should set in game items', async () => {
+      await inGameItemMarketplaceAdmin.setInGameItems(user.address);
+      expect(await inGameItemMarketplace.getInGameItems()).to.equal(
+        user.address
+      );
+    });
+
+    it('should revert if not default admin', async () => {
+      await expect(
+        inGameItemMarketplaceUser.setInGameItems(user.address)
+      ).to.be.revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${DEFAULT_ADMIN_ROLE}`
+      );
+    });
+  });
+
+  describe('pause', () => {
+    it('should pause', async () => {
+      await inGameItemMarketplacePauser.pause();
+      expect(await inGameItemMarketplace.paused()).to.be.true;
+      await inGameItemMarketplacePauser.unpause();
+      expect(await inGameItemMarketplace.paused()).to.be.false;
+    });
+
+    it('should revert if not pauser', async () => {
+      await expect(inGameItemMarketplaceUser.pause()).to.be.revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${PAUSER_ROLE}`
+      );
     });
   });
 });
