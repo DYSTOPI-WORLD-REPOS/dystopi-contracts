@@ -2,10 +2,15 @@
 pragma solidity ^0.8.4;
 
 interface IInGameItems {
-    struct ItemSeries {
+    struct Item {
         uint itemId;
         uint itemType;
         uint slots;
+    }
+
+    struct ItemSeries {
+        uint itemId;
+        uint itemSeriesId;
         uint startingTokenId;
         uint editionSize;
         uint minted;
@@ -13,13 +18,23 @@ interface IInGameItems {
 
     struct ItemSeriesIn {
         uint itemId;
-        uint itemType;
-        uint slots;
         uint itemSeriesId;
         uint editionSize;
     }
 
+    struct ItemSeriesOut {
+        uint itemId;
+        uint itemSeriesId;
+        uint itemType;
+        uint slots;
+        uint startingTokenId;
+        uint editionSize;
+        uint minted;
+    }
+
     function mint(address to, uint[] calldata itemIds, uint[] calldata itemSeriesIds, uint[] calldata amounts) external;
 
-    function getItemSeries(uint itemId, uint itemSeriesId) external returns (ItemSeries memory);
+    function getItem(uint itemId) external returns (Item memory);
+
+    function getItemSeries(uint itemId, uint itemSeriesId) external returns (ItemSeriesOut memory);
 }

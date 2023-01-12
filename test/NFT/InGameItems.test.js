@@ -56,29 +56,89 @@ describe('InGameItems', () => {
     inGameItemsUser = inGameItems.connect(user);
   });
 
-  const generateRandomItemSeries = (itemId, itemSeriesId, itemType, slots) => ({
+  const generateItem = (itemId, itemType, slots) => ({
+    itemId,
+    itemType,
+    slots
+  });
+
+  const generateRandomItemSeries = (
+    { itemId, itemType, slots },
+    itemSeriesId
+  ) => ({
     itemId,
     itemSeriesId,
-    itemType: itemType || randomIntFromInterval(1, 10),
-    slots: slots || randomIntFromInterval(1, 3),
+    itemType,
+    slots,
     editionSize: randomIntFromInterval(5, 100)
   });
 
   const addRandomItems = async () => {
+    const itemsIn = [];
     const itemSeriesIn = [];
     for (let itemId = 1; itemId <= 5; itemId++) {
-      const currentItemSeriesIn = generateRandomItemSeries(itemId, 0);
+      const item = generateItem(itemId, randomIntFromInterval(1, 5), 1);
+      const currentItemSeriesIn = generateRandomItemSeries(item, 0);
       itemSeriesIn.push(currentItemSeriesIn);
+      itemsIn.push(item);
     }
+    await inGameItemsItemAdmin.setupItems(itemsIn);
     await inGameItemsItemAdmin.setupItemSeries(itemSeriesIn);
-    return itemSeriesIn;
+    return [itemsIn, itemSeriesIn];
   };
 
+  // test setupItems function
+  describe('setupItems', () => {
+    it('should add items', async () => {
+      const itemsIn = [];
+      for (let itemId = 1; itemId <= 5; itemId++) {
+        itemsIn.push(generateItem(itemId, randomIntFromInterval(1, 5), 1));
+      }
+      await inGameItemsItemAdmin.setupItems(itemsIn);
+
+      for (const item of itemsIn) {
+        const itemOut = await inGameItems.items(item.itemId);
+        expect(itemOut.itemId).to.equal(item.itemId);
+        expect(itemOut.itemType).to.equal(item.itemType);
+        expect(itemOut.slots).to.equal(item.slots);
+      }
+    });
+
+    it('should revert if itemId is 0', async () => {
+      const itemsIn = [generateItem(0, randomIntFromInterval(1, 5), 1)];
+      await expect(inGameItemsItemAdmin.setupItems(itemsIn)).to.be.revertedWith(
+        'InGameItems: Item id must be greater than 0'
+      );
+    });
+
+    it('should revert if itemType is 0', async () => {
+      const itemsIn = [generateItem(1, 0, 1)];
+      await expect(inGameItemsItemAdmin.setupItems(itemsIn)).to.be.revertedWith(
+        'InGameItems: Item type must be greater than 0'
+      );
+    });
+
+    it('should revert if not called by item admin', async () => {
+      await expect(inGameItemsUser.setupItems([])).to.be.revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${ITEM_ADMIN_ROLE}`
+      );
+    });
+  });
+
   describe('setupItemSeries', () => {
-    it('successfully sets up itemSeries for new items', async () => {
-      const itemSeriesIn = await addRandomItems();
+    it('successfully sets up items and itemSeries for new items and updates lastOccupiedTokenId', async () => {
+      const [itemsIn, itemSeriesIn] = await addRandomItems();
 
       let lastOccupiedTokenIdCalculated = 0;
+
+      for (let i = 0; i < itemsIn.length; i++) {
+        const item = itemsIn[i];
+        const itemFromContract = await inGameItems.items(item.itemId);
+
+        expect(itemFromContract.itemId).to.equal(item.itemId);
+        expect(itemFromContract.itemType).to.equal(item.itemType);
+        expect(itemFromContract.slots).to.equal(item.slots);
+      }
 
       for await (const currentItemSeriesIn of itemSeriesIn) {
         const currentItemSeries = await inGameItems.getItemSeries(
@@ -114,18 +174,22 @@ describe('InGameItems', () => {
     });
 
     it('successfully adds another series to an itemId', async () => {
-      const itemSeriesIn = await addRandomItems();
+      const [itemsIn, itemSeriesIn] = await addRandomItems();
 
       for await (const currentItemSeriesIn of itemSeriesIn) {
-        const newSeriesIn = generateRandomItemSeries(
-          currentItemSeriesIn.itemId,
-          currentItemSeriesIn.itemSeriesId + 1,
-          currentItemSeriesIn.itemType,
-          currentItemSeriesIn.slots
+        const item = itemsIn.find(
+          ({ itemId }) => itemId === currentItemSeriesIn.itemId
         );
+
+        const newSeriesIn = generateRandomItemSeries(
+          item,
+          currentItemSeriesIn.itemSeriesId + 1
+        );
+
         const promise = await inGameItemsItemAdmin.setupItemSeries([
           newSeriesIn
         ]);
+
         await promise;
 
         const currentItemSeries = await inGameItems.getItemSeries(
@@ -138,20 +202,12 @@ describe('InGameItems', () => {
           .withArgs(
             currentItemSeriesIn.itemId,
             currentItemSeriesIn.itemSeriesId + 1,
-            currentItemSeriesIn.itemType,
-            currentItemSeriesIn.slots,
             currentItemSeries.startingTokenId.toNumber(),
             currentItemSeries.editionSize.toNumber()
           );
 
         expect(currentItemSeries.itemId.toNumber()).to.be.equal(
           newSeriesIn.itemId
-        );
-        expect(currentItemSeries.itemType.toNumber()).to.be.equal(
-          newSeriesIn.itemType
-        );
-        expect(currentItemSeries.slots.toNumber()).to.be.equal(
-          newSeriesIn.slots
         );
         expect(currentItemSeries.editionSize.toNumber()).to.be.equal(
           newSeriesIn.editionSize
@@ -161,21 +217,24 @@ describe('InGameItems', () => {
     });
 
     it('fails without access', async () => {
-      const seriesIn = generateRandomItemSeries(1, 0);
+      const seriesIn = generateRandomItemSeries(generateItem(1, 2, 3), 0);
       await expect(inGameItems.setupItemSeries([seriesIn])).to.be.revertedWith(
         `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${ITEM_ADMIN_ROLE}`
       );
     });
 
     it('fails when itemSeriesId is not matching', async () => {
-      const seriesIn1_1 = generateRandomItemSeries(1, 1);
+      const item1 = generateItem(1, 2, 3);
+      const item2 = generateItem(1, 2, 3);
+      await inGameItemsItemAdmin.setupItems([item1]);
+      const seriesIn1_1 = generateRandomItemSeries(item1, 1);
 
       await expect(
         inGameItemsItemAdmin.setupItemSeries([seriesIn1_1])
       ).to.be.revertedWith('InGameItems: Item series ID mismatch');
 
-      const seriesIn2_0 = generateRandomItemSeries(2, 0);
-      const seriesIn2_2 = generateRandomItemSeries(2, 2);
+      const seriesIn2_0 = generateRandomItemSeries(item2, 0);
+      const seriesIn2_2 = generateRandomItemSeries(item2, 2);
 
       await inGameItemsItemAdmin.setupItemSeries([seriesIn2_0]);
       await expect(
@@ -183,53 +242,34 @@ describe('InGameItems', () => {
       ).to.be.revertedWith('InGameItems: Item series ID mismatch');
     });
 
-    it('fails if itemType or slots is not matching', async () => {
-      const seriesIn = generateRandomItemSeries(1, 0);
-
-      await inGameItemsItemAdmin.setupItemSeries([seriesIn]);
-
-      const seriesInWrongItemType = generateRandomItemSeries(
-        1,
-        1,
-        seriesIn.itemType + 1,
-        seriesIn.slots
-      );
-
+    it('should fail if item does not exist', async () => {
+      const seriesIn = generateRandomItemSeries(generateItem(1, 2, 3), 0);
       await expect(
-        inGameItemsItemAdmin.setupItemSeries([seriesInWrongItemType])
-      ).to.be.revertedWith('InGameItems: Item type mismatch');
-
-      const seriesInWrongSlots = generateRandomItemSeries(
-        1,
-        1,
-        seriesIn.itemType,
-        seriesIn.slots + 1
-      );
-
-      await expect(
-        inGameItemsItemAdmin.setupItemSeries([seriesInWrongSlots])
-      ).to.be.revertedWith('InGameItems: Slots mismatch');
+        inGameItemsItemAdmin.setupItemSeries([seriesIn])
+      ).to.be.revertedWith('InGameItems: Item does not exist');
     });
   });
 
   describe('mint', () => {
-    it('mints 1 of 1 series', async () => {
-      const seriesIn = await addRandomItems();
+    it('mints 1 of 1 series, assigns the right ids', async () => {
+      const [itemsIn, seriesIn] = await addRandomItems();
 
-      await expect(
-        inGameItemsMinter.mint(
-          user.address,
-          [seriesIn[0].itemId],
-          [seriesIn[0].itemSeriesId],
-          [1]
+      for (let i = 1; i <= 3; i++) {
+        await expect(
+          inGameItemsMinter.mint(
+            user.address,
+            [seriesIn[0].itemId],
+            [seriesIn[0].itemSeriesId],
+            [1]
+          )
         )
-      )
-        .to.emit(inGameItemsMinter, 'Transfer')
-        .withArgs(NULL_ADDRESS, user.address, 1);
+          .to.emit(inGameItemsMinter, 'Transfer')
+          .withArgs(NULL_ADDRESS, user.address, i);
+      }
     });
 
     it('mints 5 of 5 series', async () => {
-      const seriesIn = await addRandomItems();
+      const [itemsIn, seriesIn] = await addRandomItems();
 
       const itemIds = [];
       const itemSeriesIds = [];
@@ -253,8 +293,14 @@ describe('InGameItems', () => {
       expect(userBalance.toNumber()).to.be.equal(5 * seriesIn.length);
     });
 
+    it('cannot mnt if item does not exist', async () => {
+      await expect(
+        inGameItemsMinter.mint(user.address, [1], [0], [1])
+      ).to.be.revertedWith('InGameItems: Item does not exist');
+    });
+
     it('cannot mint more than the max from a token', async () => {
-      const seriesIn = await addRandomItems();
+      const [itemsIn, seriesIn] = await addRandomItems();
 
       let currentSeriesIn = seriesIn[0];
 
@@ -319,7 +365,7 @@ describe('InGameItems', () => {
 
       await inGameItemsItemAdmin.setBaseURI(baseURI);
 
-      const seriesIn = await addRandomItems();
+      const [itemsIn, seriesIn] = await addRandomItems();
 
       const currentSeriesIn = seriesIn[0];
 
@@ -346,7 +392,7 @@ describe('InGameItems', () => {
 
   describe('pause', () => {
     it('pauses and unpauses transfers', async () => {
-      const seriesIn = await addRandomItems();
+      const [itemsIn, seriesIn] = await addRandomItems();
 
       const currentSeriesIn = seriesIn[0];
 
@@ -387,6 +433,67 @@ describe('InGameItems', () => {
       ).to.be.revertedWith(
         `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${DEFAULT_ADMIN_ROLE}`
       );
+    });
+  });
+
+  describe('getItem', () => {
+    it('should get the item', async () => {
+      const [itemsIn, seriesIn] = await addRandomItems();
+      const item = itemsIn[0];
+      const itemFromContract = await inGameItems.getItem(item.itemId);
+
+      expect(itemFromContract.itemId.toNumber()).to.be.equal(item.itemId);
+      expect(itemFromContract.itemType.toNumber()).to.be.equal(item.itemType);
+      expect(itemFromContract.slots.toNumber()).to.be.equal(item.slots);
+    });
+
+    it('should revert if itemId is 0', async () => {
+      await expect(inGameItems.getItem(0)).to.be.revertedWith(
+        'InGameItems: Item id must be greater than 0'
+      );
+    });
+
+    it('should revert if item does not exist', async () => {
+      await expect(inGameItems.getItem(1)).to.be.revertedWith(
+        'InGameItems: Item does not exist'
+      );
+    });
+  });
+
+  describe('getItemSeries', () => {
+    it('should get the item series', async () => {
+      const [itemsIn, seriesIn] = await addRandomItems();
+      const series = seriesIn[0];
+      const item = itemsIn.find(({ itemId }) => itemId === series.itemId);
+      const seriesFromContract = await inGameItems.getItemSeries(
+        series.itemId,
+        series.itemSeriesId
+      );
+
+      expect(seriesFromContract.itemId.toNumber()).to.be.equal(series.itemId);
+      expect(seriesFromContract.itemSeriesId.toNumber()).to.be.equal(
+        series.itemSeriesId
+      );
+      expect(seriesFromContract.editionSize.toNumber()).to.be.equal(
+        series.editionSize
+      );
+      expect(seriesFromContract.itemType.toNumber()).to.be.equal(item.itemType);
+      expect(seriesFromContract.slots.toNumber()).to.be.equal(item.slots);
+      expect(seriesFromContract.minted.toNumber()).to.be.equal(0);
+    });
+
+    it('should revert if item does not exist', async () => {
+      await expect(inGameItems.getItemSeries(1, 0)).to.be.revertedWith(
+        'InGameItems: Item does not exist'
+      );
+    });
+
+    it('should revert if item series does not exist', async () => {
+      const [itemsIn, seriesIn] = await addRandomItems();
+      const item = itemsIn[0];
+      await expect(
+        inGameItems.getItemSeries(item.itemId, 10)
+      ).to.be.revertedWith('InGameItems: itemSeriesId out of range');
     });
   });
 });

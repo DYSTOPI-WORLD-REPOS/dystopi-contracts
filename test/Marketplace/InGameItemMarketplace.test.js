@@ -66,15 +66,19 @@ const addSeriesToItemsAndMarketplace = async (
     ]
   };
 
+  const inGameItemsItems = [];
   const inGameItemsSeries = [];
   const inGameItemMarketplaceSeries = [];
 
   for (const item of [item1, item2, item3]) {
+    inGameItemsItems.push({
+      itemId: item.itemId,
+      itemType: item.itemType,
+      slots: item.slots
+    });
     for (const series of item.series) {
       inGameItemsSeries.push({
         itemId: item.itemId,
-        itemType: item.itemType,
-        slots: item.slots,
         itemSeriesId: series.itemSeriesId,
         editionSize: series.editionSize
       });
@@ -89,6 +93,7 @@ const addSeriesToItemsAndMarketplace = async (
     }
   }
 
+  await inGameItems.setupItems(inGameItemsItems);
   await inGameItems.setupItemSeries(inGameItemsSeries);
   await inGameItemMarketplace.setupItemSeriesPricing(
     inGameItemMarketplaceSeries

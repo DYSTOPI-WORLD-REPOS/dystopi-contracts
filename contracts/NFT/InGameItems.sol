@@ -28,18 +28,16 @@ contract InGameItems is
     // can configure items
     bytes32 public constant ITEM_ADMIN_ROLE = keccak256("ITEM_ADMIN_ROLE");
 
+    // items
+    mapping(uint => Item) public items;
     // itemId => itemSeriesId => ItemSeries
     mapping(uint => ItemSeries[]) public itemSeriesMap;
-    // tokenId => itemId
-    mapping(uint => uint) tokenIdItemIdMap;
     // counter for auto-incremented ids
     uint public lastOccupiedTokenId;
 
     event ItemSeriesAdded(
         uint itemId,
         uint itemSeriesId,
-        uint itemType,
-        uint slots,
         uint startingTokenId,
         uint editionSize
     );
@@ -80,6 +78,7 @@ contract InGameItems is
                 "InGameItems: Array length mismatch"
         );
         for (uint i = 0; i < itemIds.length; i++) {
+            require(items[itemIds[i]].itemId != 0, "InGameItems: Item does not exist");
             ItemSeries storage currentItemSeries = itemSeriesMap[itemIds[i]][itemSeriesIds[i]];
             require(
                 currentItemSeries.minted + qtys[i] <= currentItemSeries.editionSize,
@@ -88,31 +87,39 @@ contract InGameItems is
 
             for (uint j = 0; j < qtys[i]; j++) {
                 uint tokenId = currentItemSeries.startingTokenId + currentItemSeries.minted;
-                tokenIdItemIdMap[tokenId] = currentItemSeries.itemId;
                 currentItemSeries.minted++;
                 _safeMint(to, tokenId);
             }
         }
     }
 
+    function setupItems(Item[] calldata itemsIn) external onlyRole(ITEM_ADMIN_ROLE) {
+        for (uint i = 0; i < itemsIn.length; i++) {
+            Item memory item = itemsIn[i];
+            require(item.itemId > 0, "InGameItems: Item id must be greater than 0");
+            require(item.itemType > 0, "InGameItems: Item type must be greater than 0");
+            items[item.itemId] = item;
+        }
+    }
+
     function setupItemSeries(ItemSeriesIn[] calldata itemSeriesIn) external onlyRole(ITEM_ADMIN_ROLE) {
         for (uint i = 0; i < itemSeriesIn.length; i++) {
             ItemSeriesIn memory currentItemSeriesIn = itemSeriesIn[i];
+            // cannot have itemId that's 0
+            require(
+                currentItemSeriesIn.itemId > 0,
+                "InGameItems: Item id must be greater than 0"
+            );
+            // cannot add a series for an item that doesn't exist
+            require(
+                items[currentItemSeriesIn.itemId].itemId != 0,
+                "InGameItems: Item does not exist"
+            );
+            // can only add the next series
             require(
                 itemSeriesMap[currentItemSeriesIn.itemId].length == currentItemSeriesIn.itemSeriesId,
                 "InGameItems: Item series ID mismatch"
             );
-            // check if previous series for this item had the same itemType and slots values
-            if (currentItemSeriesIn.itemSeriesId > 0) {
-                require(
-                    itemSeriesMap[currentItemSeriesIn.itemId][currentItemSeriesIn.itemSeriesId - 1].itemType == currentItemSeriesIn.itemType,
-                    "InGameItems: Item type mismatch"
-                );
-                require(
-                    itemSeriesMap[currentItemSeriesIn.itemId][currentItemSeriesIn.itemSeriesId - 1].slots == currentItemSeriesIn.slots,
-                    "InGameItems: Slots mismatch"
-                );
-            }
 
             lastOccupiedTokenId += currentItemSeriesIn.editionSize;
 
@@ -120,29 +127,44 @@ contract InGameItems is
             currentItemSeries.startingTokenId = lastOccupiedTokenId - currentItemSeriesIn.editionSize + 1;
             currentItemSeries.editionSize = currentItemSeriesIn.editionSize;
             currentItemSeries.itemId = currentItemSeriesIn.itemId;
-            currentItemSeries.itemType = currentItemSeriesIn.itemType;
-            currentItemSeries.slots = currentItemSeriesIn.slots;
+            currentItemSeries.itemSeriesId = currentItemSeriesIn.itemSeriesId;
 
             itemSeriesMap[currentItemSeries.itemId].push(currentItemSeries);
 
             emit ItemSeriesAdded(
                 currentItemSeries.itemId,
                 currentItemSeriesIn.itemSeriesId,
-                currentItemSeries.itemType,
-                currentItemSeries.slots,
                 currentItemSeries.startingTokenId,
                 currentItemSeries.editionSize
             );
         }
     }
 
-    function getItemSeries(uint itemId, uint itemSeriesId) external view override returns (ItemSeries memory) {
-        require(itemSeriesMap[itemId].length > 0, "InGameItems: itemId does not exist");
+    function getItem(uint itemId) external view override returns (Item memory) {
+        require(itemId > 0, "InGameItems: Item id must be greater than 0");
+        require(items[itemId].itemId != 0, "InGameItems: Item does not exist");
+        return items[itemId];
+    }
+
+    function getItemSeries(uint itemId, uint itemSeriesId) external view override returns (ItemSeriesOut memory) {
+        Item memory currentItem = items[itemId];
+        require(currentItem.itemId != 0, "InGameItems: Item does not exist");
         require(
             itemSeriesMap[itemId].length > itemSeriesId,
             "InGameItems: itemSeriesId out of range"
         );
-        return itemSeriesMap[itemId][itemSeriesId];
+        ItemSeries memory currentItemSeries = itemSeriesMap[itemId][itemSeriesId];
+
+        ItemSeriesOut memory currentItemSeriesOut;
+        currentItemSeriesOut.itemId = currentItemSeries.itemId;
+        currentItemSeriesOut.itemSeriesId = currentItemSeries.itemSeriesId;
+        currentItemSeriesOut.startingTokenId = currentItemSeries.startingTokenId;
+        currentItemSeriesOut.editionSize = currentItemSeries.editionSize;
+        currentItemSeriesOut.minted = currentItemSeries.minted;
+        currentItemSeriesOut.itemType = currentItem.itemType;
+        currentItemSeriesOut.slots = currentItem.slots;
+
+        return currentItemSeriesOut;
     }
 
     function setBaseURI(string memory baseURI_) external onlyRole(ITEM_ADMIN_ROLE) {
