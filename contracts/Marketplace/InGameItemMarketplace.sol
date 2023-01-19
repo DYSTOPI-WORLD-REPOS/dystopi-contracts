@@ -91,6 +91,10 @@ contract InGameItemMarketplace is
             itemIds.length == itemSeriesIds.length && itemIds.length == qtys.length,
             "InGameItemMarketplace: Array length mismatch"
         );
+        require(
+            itemIds.length > 0,
+            "InGameItemMarketplace: No items to purchase"
+        );
 
         uint ethPriceTotal = 0;
         uint erc20PriceTotal = 0;

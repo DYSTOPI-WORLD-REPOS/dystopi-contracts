@@ -484,6 +484,14 @@ describe('InGameItemMarketplace', () => {
         'InGameItemMarketplace: Item series ID out of bounds'
       );
     });
+
+    it('should revert if 0 itemIds', async () => {
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(user.address, [], [], [])
+        )
+      ).to.be.revertedWith('InGameItemMarketplace: No items to purchase');
+    });
   });
 
   describe('setupItemSeriesPricing', () => {

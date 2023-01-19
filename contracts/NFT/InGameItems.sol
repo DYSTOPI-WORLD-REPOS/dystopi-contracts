@@ -36,8 +36,8 @@ contract InGameItems is
     uint public lastOccupiedTokenId;
 
     event ItemSeriesAdded(
-        uint itemId,
-        uint itemSeriesId,
+        uint indexed itemId,
+        uint indexed itemSeriesId,
         uint startingTokenId,
         uint editionSize
     );
