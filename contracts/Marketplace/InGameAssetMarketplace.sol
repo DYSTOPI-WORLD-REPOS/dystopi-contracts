@@ -30,9 +30,12 @@ contract InGameAssetMarketplace is
         bool active;
     }
 
+    event AssetActivation(uint assetId, bool active);
+
     event AssetPurchased(
         address indexed buyer,
-        uint indexed assetId
+        uint indexed assetId,
+        uint qty
     );
 
     // assetId => Asset
@@ -95,6 +98,8 @@ contract InGameAssetMarketplace is
 
             Asset memory asset = assetMap[assetIds[i]];
 
+            require(asset.active, "InGameAssetMarketplace: Asset is not active");
+
             // eth price takes precedence, if both are gt 0
             if (asset.ethPrice > 0) {
                 ethPriceTotal += asset.ethPrice * qtys[i];
@@ -112,7 +117,7 @@ contract InGameAssetMarketplace is
                 }
             }
 
-            emit AssetPurchased(_msgSender(), assetIds[i]);
+            emit AssetPurchased(_msgSender(), assetIds[i], qtys[i]);
         }
 
         require(ethPriceTotal == msg.value, "InGameAssetMarketplace: ETH price mismatch");
@@ -126,13 +131,22 @@ contract InGameAssetMarketplace is
 
     function setupAssets(Asset[] calldata assets) external onlyRole(STORE_ADMIN_ROLE) {
         for (uint i = 0; i < assets.length; i++) {
+            require(
+                assets[i].ethPrice > 0 ||
+                assets[i].erc20Price > 0 && assets[i].erc20Address != address(0),
+                "InGameAssetMarketplace: Price must be defined in either an ERC20 or ETH"
+            );
             assetMap[assets[i].assetId] = assets[i];
+
+            emit AssetActivation(assets[i].assetId, assets[i].active);
         }
     }
 
     function activateAssets(bool active, uint[] calldata assetIds) external onlyRole(STORE_ADMIN_ROLE) {
         for (uint i = 0; i < assetIds.length; i++) {
             assetMap[assetIds[i]].active = active;
+
+            emit AssetActivation(assetIds[i], active);
         }
     }
 

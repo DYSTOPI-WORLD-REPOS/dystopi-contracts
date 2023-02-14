@@ -48,6 +48,12 @@ contract InGameItemMarketplace is
     // signer for signature verification
     address internal _signer;
 
+    event ItemSeriesActivation(
+        uint indexed itemId,
+        uint indexed itemSeriesId,
+        bool active
+    );
+
     constructor(
         address admin,
         address pauser,
@@ -104,6 +110,8 @@ contract InGameItemMarketplace is
             require(qtys[i] > 0, "InGameItemMarketplace: Cannot purchase 0 tokens");
 
             ItemSeriesPricing memory itemSeriesPricing = getItemSeriesPricing(itemIds[i], itemSeriesIds[i]);
+
+            require(itemSeriesPricing.active, "InGameItemMarketplace: Item series is not active");
 
             // eth price takes precedence, if both are gt 0
             if (itemSeriesPricing.ethPrice > 0) {
@@ -162,6 +170,12 @@ contract InGameItemMarketplace is
             } else {
                 itemSeriesForItemId.push(newItemSeriesPricing);
             }
+
+            emit ItemSeriesActivation(
+                currentItemSeriesPricingIn.itemId,
+                currentItemSeriesPricingIn.itemSeriesId,
+                currentItemSeriesPricingIn.active
+            );
         }
     }
 
@@ -175,6 +189,12 @@ contract InGameItemMarketplace is
         for (uint i = 0; i < itemIds.length; i++) {
             ItemSeriesPricing storage currentItemSeriesPricing = itemSeriesPricingMap[itemIds[i]][itemSeriesIds[i]];
             currentItemSeriesPricing.active = active;
+
+            emit ItemSeriesActivation(
+                itemIds[i],
+                itemSeriesIds[i],
+                active
+            );
         }
     }
 

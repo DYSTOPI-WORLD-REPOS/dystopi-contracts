@@ -95,11 +95,13 @@ const addSeriesToItemsAndMarketplace = async (
 
   await inGameItems.setupItems(inGameItemsItems);
   await inGameItems.setupItemSeries(inGameItemsSeries);
-  await inGameItemMarketplace.setupItemSeriesPricing(
+  const promise = inGameItemMarketplace.setupItemSeriesPricing(
     inGameItemMarketplaceSeries
   );
 
-  return [inGameItemsSeries, inGameItemMarketplaceSeries];
+  await promise;
+
+  return [inGameItemsSeries, inGameItemMarketplaceSeries, promise];
 };
 
 const createPurchaseParams = (
@@ -139,6 +141,7 @@ describe('InGameItemMarketplace', () => {
   let inGameItemMarketplaceUser;
   let inGameItemMarketplaceSeries;
   let inGameItemsSeries;
+  let addSeriesToMarketplacePromise;
   let deployer;
   let admin;
   let pauser;
@@ -231,13 +234,16 @@ describe('InGameItemMarketplace', () => {
       .connect(user)
       .approve(inGameItemMarketplace.address, ethers.constants.MaxUint256);
 
-    [inGameItemsSeries, inGameItemMarketplaceSeries] =
-      await addSeriesToItemsAndMarketplace(
-        inGameItemsItemAdmin,
-        inGameItemMarketplaceStoreAdmin,
-        erc20_1,
-        erc20_2
-      );
+    [
+      inGameItemsSeries,
+      inGameItemMarketplaceSeries,
+      addSeriesToMarketplacePromise
+    ] = await addSeriesToItemsAndMarketplace(
+      inGameItemsItemAdmin,
+      inGameItemMarketplaceStoreAdmin,
+      erc20_1,
+      erc20_2
+    );
   });
 
   describe('purchase', () => {
@@ -376,7 +382,7 @@ describe('InGameItemMarketplace', () => {
         '100000000000000000000000000000',
         'ether'
       );
-      inGameItemMarketplaceStoreAdmin.setupItemSeriesPricing(
+      await inGameItemMarketplaceStoreAdmin.setupItemSeriesPricing(
         inGameItemMarketplaceSeries
       );
 
@@ -492,11 +498,29 @@ describe('InGameItemMarketplace', () => {
         )
       ).to.be.revertedWith('InGameItemMarketplace: No items to purchase');
     });
+
+    it('should revert if item is inactive', async () => {
+      await inGameItemMarketplaceStoreAdmin.activateItemSeries(
+        false,
+        [inGameItemMarketplaceSeries[0].itemId],
+        [inGameItemMarketplaceSeries[0].itemSeriesId]
+      );
+      await expect(
+        inGameItemMarketplaceUser.purchase(
+          ...createPurchaseParams(
+            user.address,
+            [inGameItemMarketplaceSeries[0].itemId],
+            [inGameItemMarketplaceSeries[0].itemSeriesId],
+            [1]
+          )
+        )
+      ).to.be.revertedWith('InGameItemMarketplace: Item series is not active');
+    });
   });
 
   describe('setupItemSeriesPricing', () => {
     it('should add series to the marketplace', async () => {
-      for (const series of inGameItemMarketplaceSeries) {
+      for await (const series of inGameItemMarketplaceSeries) {
         const itemSeries = await inGameItemMarketplace.getItemSeriesPricing(
           series.itemId,
           series.itemSeriesId
@@ -507,6 +531,10 @@ describe('InGameItemMarketplace', () => {
           series.erc20Address,
           series.active
         ]);
+
+        await expect(addSeriesToMarketplacePromise)
+          .to.emit(inGameItemMarketplace, 'ItemSeriesActivation')
+          .withArgs(series.itemId, series.itemSeriesId, series.active);
       }
     });
 
@@ -542,13 +570,25 @@ describe('InGameItemMarketplace', () => {
 
   describe('activateItemSeries', () => {
     it('should deactivate a list of item series than activates them again', async () => {
-      await inGameItemMarketplaceStoreAdmin.activateItemSeries(
+      const promise = inGameItemMarketplaceStoreAdmin.activateItemSeries(
         false,
         inGameItemMarketplaceSeries.map((s) => s.itemId),
         inGameItemMarketplaceSeries.map((s) => s.itemSeriesId)
       );
 
-      for (const series of inGameItemMarketplaceSeries) {
+      for (let i = 0; i < inGameItemMarketplaceSeries; i++) {
+        await expect(promise)
+          .to.emit(inGameItemMarketplaceStoreAdmin, 'ItemSeriesActivation')
+          .withArgs(
+            inGameItemMarketplaceSeries[i].itemId,
+            inGameItemMarketplaceSeries[i].itemSeriesId,
+            false
+          );
+      }
+
+      await promise;
+
+      for await (const series of inGameItemMarketplaceSeries) {
         const itemSeries = await inGameItemMarketplace.getItemSeriesPricing(
           series.itemId,
           series.itemSeriesId
@@ -556,13 +596,25 @@ describe('InGameItemMarketplace', () => {
         expect(itemSeries[3]).to.be.false;
       }
 
-      await inGameItemMarketplaceStoreAdmin.activateItemSeries(
+      const promise2 = inGameItemMarketplaceStoreAdmin.activateItemSeries(
         true,
         inGameItemMarketplaceSeries.map((s) => s.itemId),
         inGameItemMarketplaceSeries.map((s) => s.itemSeriesId)
       );
 
-      for (const series of inGameItemMarketplaceSeries) {
+      for (let i = 0; i < inGameItemMarketplaceSeries; i++) {
+        await expect(promise2)
+          .to.emit(inGameItemMarketplaceStoreAdmin, 'ItemSeriesActivation')
+          .withArgs(
+            inGameItemMarketplaceSeries[i].itemId,
+            inGameItemMarketplaceSeries[i].itemSeriesId,
+            true
+          );
+      }
+
+      await promise2;
+
+      for await (const series of inGameItemMarketplaceSeries) {
         const itemSeries = await inGameItemMarketplace.getItemSeriesPricing(
           series.itemId,
           series.itemSeriesId
