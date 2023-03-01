@@ -1,27 +1,27 @@
-const { DEPLOY_TAGS } = require('../../utils/constants');
-const actionName = DEPLOY_TAGS.actions.setMarketplaceAsInGameItemMinter;
+const { DEPLOY_TAGS, CONTRACTS } = require('../../utils/constants');
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { log, execute, read } = deployments;
 
   const { admin } = await getNamedAccounts();
 
-  // add the marketplace to the items contract as a minter
-  const marketplace = await deployments.get('InGameItemMarketplace');
+  const marketplace = await deployments.get(CONTRACTS.inGameItemMarketplace);
 
-  const minterRole = await read('InGameItems', 'MINTER_ROLE');
+  const minterRole = await read(CONTRACTS.inGameItems, 'MINTER_ROLE');
 
   const isMinter = await read(
-    'InGameItems',
+    CONTRACTS.inGameItems,
     'hasRole',
     minterRole,
     marketplace.address
   );
 
   if (!isMinter) {
-    log(`Adding InGameItemMarketplace as a minter on InGameItems`);
+    log(
+      `Adding ${CONTRACTS.inGameItemMarketplace} as a minter on ${CONTRACTS.inGameItems}`
+    );
     await execute(
-      'InGameItems',
+      CONTRACTS.inGameItems,
       { from: admin, log: true },
       'grantRole',
       minterRole,
@@ -30,5 +30,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   }
 };
 
-module.exports.tags = [actionName, DEPLOY_TAGS.marketplace];
-module.exports.dependencies = [DEPLOY_TAGS.contracts.inGameItemMarketplace];
+module.exports.tags = [
+  DEPLOY_TAGS.actions.setMarketplaceAsInGameItemMinter,
+  DEPLOY_TAGS.marketplace
+];
+module.exports.dependencies = [DEPLOY_TAGS.actions.deployInGameItemMarketplace];

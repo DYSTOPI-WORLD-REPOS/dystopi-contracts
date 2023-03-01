@@ -1,11 +1,12 @@
 const getDeployVar = require('../../utils/getDeployVar');
-const { DEPLOY_TAGS } = require('../../utils/constants');
-const contractName = DEPLOY_TAGS.contracts.inGameItems;
+const { DEPLOY_TAGS, CONTRACTS } = require('../../utils/constants');
 
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const chainId = await getChainId();
 
   const baseURI = getDeployVar('metadataApiUrl', chainId);
+  const name = getDeployVar('inGameItemsName', chainId);
+  const symbol = getDeployVar('inGameItemsSymbol', chainId);
 
   const { deploy } = deployments;
 
@@ -19,17 +20,17 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     nullAddress
   } = await getNamedAccounts();
 
-  await deploy(contractName, {
+  await deploy(CONTRACTS.inGameItems, {
     from: deployer,
-    contract: contractName,
+    contract: CONTRACTS.inGameItems,
     proxy: {
       owner: upgradeAdmin,
       proxyContract: 'OpenZeppelinTransparentProxy',
       execute: {
         methodName: 'initialize',
         args: [
-          'Dystopi: Equipment',
-          'DYSEQ',
+          name,
+          symbol,
           admin,
           pauser,
           minter,
@@ -44,4 +45,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   });
 };
 
-module.exports.tags = [contractName, DEPLOY_TAGS.items];
+module.exports.tags = [
+  DEPLOY_TAGS.actions.deployInGameItems,
+  DEPLOY_TAGS.items
+];

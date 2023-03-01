@@ -1,10 +1,9 @@
-const { DEPLOY_TAGS } = require('../../utils/constants');
-const contractName = DEPLOY_TAGS.contracts.inGameItemMarketplace;
+const { DEPLOY_TAGS, CONTRACTS } = require('../../utils/constants');
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
 
-  const inGameItems = await deployments.get('InGameItems');
+  const inGameItems = await deployments.get(CONTRACTS.inGameItems);
 
   const {
     deployer,
@@ -16,7 +15,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     nullAddress
   } = await getNamedAccounts();
 
-  await deploy(contractName, {
+  await deploy(CONTRACTS.inGameItemMarketplace, {
     from: deployer,
     args: [
       admin,
@@ -32,5 +31,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   });
 };
 
-module.exports.tags = [contractName, DEPLOY_TAGS.marketplace];
+module.exports.tags = [
+  DEPLOY_TAGS.actions.deployInGameItemMarketplace,
+  DEPLOY_TAGS.marketplace
+];
 module.exports.dependencies = [DEPLOY_TAGS.items];
