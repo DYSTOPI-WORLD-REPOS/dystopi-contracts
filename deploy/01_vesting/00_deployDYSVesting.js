@@ -7,9 +7,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   const { deployer, dysChildPolygon } = await getNamedAccounts();
 
-  // use child token on polygon
+  // use child token on polygon and mumbai
   let tokenAddress = dysChildPolygon;
-  if (chainId !== '137') {
+  if (chainId !== '137' && chainId !== '80001') {
     const dysToken = await deployments.get(CONTRACTS.dysToken);
     tokenAddress = dysToken.address;
   }

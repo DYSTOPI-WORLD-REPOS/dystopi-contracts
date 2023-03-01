@@ -75,7 +75,8 @@ module.exports = {
       hardhat: 0
     },
     dysChildPolygon: {
-      polygon: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063'
+      polygon: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
+      polygonMumbai: '0x4EA658c98cfa7446deb80B3d03713321c6D1A6b4'
     },
     nullAddress: {
       default: '0x0000000000000000000000000000000000000000'
