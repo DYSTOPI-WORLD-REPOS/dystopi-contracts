@@ -3,8 +3,8 @@ require('@nomiclabs/hardhat-ethers');
 require('@nomiclabs/hardhat-etherscan');
 require('hardhat-gas-reporter');
 require('hardhat-deploy');
-require("@nomiclabs/hardhat-waffle");
-require("solidity-coverage");
+require('@nomiclabs/hardhat-waffle');
+require('solidity-coverage');
 require('@openzeppelin/hardhat-upgrades');
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
       url: process.env.POLYGON_URL,
       accounts: [process.env.POLYGON_DEPLOYER]
     },
-    mumbai: {
+    polygonMumbai: {
       url: process.env.MUMBAI_URL,
       accounts: [process.env.MUMBAI_DEPLOYER]
     }
@@ -37,10 +37,45 @@ module.exports = {
     deployer: {
       default: 0
     },
+    upgradeAdmin: {
+      polygonMumbai: 0,
+      hardhat: 0
+    },
     dysBeneficiary: {
-      default: '0xFe3AC01fA715A09721266B9db1F9f60d0BF1BDbB',
+      polygonMumbai: 0,
       hardhat: 0,
       mainnet: '0x9Cc9F2a6C035Ce0d3Dc37013516f03cbe2127565'
+    },
+    marketplaceBeneficiary: {
+      polygonMumbai: 0,
+      hardhat: 0
+    },
+    marketplaceSigner: {
+      polygonMumbai: '0xd8288Ce8348D53887Cb934240B93F5B41B08D4BE',
+      hardhat: '0xd8288Ce8348D53887Cb934240B93F5B41B08D4BE'
+    },
+    admin: {
+      polygonMumbai: 0,
+      hardhat: 0
+    },
+    pauser: {
+      polygonMumbai: 0,
+      hardhat: 0
+    },
+    minter: {
+      polygonMumbai: 0,
+      hardhat: 0
+    },
+    itemAdmin: {
+      polygonMumbai: 0,
+      hardhat: 0
+    },
+    storeAdmin: {
+      polygonMumbai: 0,
+      hardhat: 0
+    },
+    nullAddress: {
+      default: '0x0000000000000000000000000000000000000000'
     }
   },
   gasReporter: {
