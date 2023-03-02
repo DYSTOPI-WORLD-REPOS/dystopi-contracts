@@ -2,7 +2,7 @@ module.exports = {
   DEPLOY_VARS: {
     metadataApiUrl: {
       80001: 'https://api-staging.dystopi.world/v1/items/token/metadata/',
-      31337: ''
+      31337: 'https://api-staging.dystopi.world/v1/items/token/metadata/'
     },
     inGameItemsName: {
       default: 'Dystopi: Equipment'
@@ -13,10 +13,10 @@ module.exports = {
   },
   DEPLOY_TAGS: {
     groups: {
-      token: 'TOKEN',
-      vesting: 'VESTING',
-      items: 'ITEMS',
-      marketplace: 'MARKETPLACE'
+      token: 'token',
+      vesting: 'vesting',
+      items: 'items',
+      marketplace: 'marketplace'
     },
     actions: {
       // deploy
@@ -26,7 +26,8 @@ module.exports = {
       deployInGameItemMarketplace: 'deployInGameItemMarketplace',
       deployInGameAssetMarketplace: 'deployInGameAssetMarketplace',
       // set
-      setMarketplaceAsInGameItemMinter: 'setMarketplaceAsInGameItemMinter'
+      setMarketplaceAsInGameItemMinter: 'setMarketplaceAsInGameItemMinter',
+      setPrivateRoundVesting: 'setPrivateRoundVesting'
     }
   },
   CONTRACTS: {

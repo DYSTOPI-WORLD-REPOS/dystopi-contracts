@@ -47,5 +47,5 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 module.exports.tags = [
   DEPLOY_TAGS.actions.deployInGameItems,
-  DEPLOY_TAGS.items
+  DEPLOY_TAGS.groups.items
 ];

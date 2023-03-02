@@ -30,5 +30,5 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
 module.exports.tags = [
   DEPLOY_TAGS.actions.deployInGameAssetMarketplace,
-  DEPLOY_TAGS.marketplace
+  DEPLOY_TAGS.groups.marketplace
 ];

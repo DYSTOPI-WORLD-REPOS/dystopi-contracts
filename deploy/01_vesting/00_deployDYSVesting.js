@@ -24,5 +24,5 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 module.exports.tags = [
   DEPLOY_TAGS.actions.deployDysVesting,
-  DEPLOY_TAGS.vesting
+  DEPLOY_TAGS.groups.vesting
 ];

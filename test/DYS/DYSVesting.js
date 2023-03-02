@@ -619,4 +619,45 @@ describe('DYSVesting', function () {
       );
     });
   });
+
+  describe('createVestingSchedules', function () {
+    it('should create a batch of vesting schedules', async function () {
+      const tokenVesting = await DYSVesting.deploy(dysToken.address);
+      await tokenVesting.deployed();
+      await dysToken.transfer(tokenVesting.address, 1000);
+      const start = Math.floor(Date.now() / 1000);
+      const vestingSchedules = [
+        {
+          beneficiary: addr1.address,
+          start,
+          cliffDelta: 0,
+          duration: 1000,
+          slicePeriodSeconds: 1,
+          revocable: false,
+          amount: 500
+        },
+        {
+          beneficiary: addr2.address,
+          start,
+          cliffDelta: 0,
+          duration: 1000,
+          slicePeriodSeconds: 1,
+          revocable: false,
+          amount: 500
+        }
+      ];
+      await tokenVesting.createVestingSchedules(vestingSchedules);
+      expect(await tokenVesting.getWithdrawableAmount()).to.equal(0);
+      expect(await tokenVesting.getVestingSchedulesCount()).to.equal(2);
+      expect(
+        await tokenVesting.getVestingSchedulesCountByBeneficiary(addr1.address)
+      ).to.equal(1);
+      expect(
+        await tokenVesting.getVestingSchedulesCountByBeneficiary(addr2.address)
+      ).to.equal(1);
+      expect(await tokenVesting.getVestingSchedulesTotalAmount()).to.equal(
+        1000
+      );
+    });
+  });
 });

@@ -25,7 +25,12 @@ module.exports = {
     },
     polygonMumbai: {
       url: process.env.MUMBAI_URL,
-      accounts: [process.env.MUMBAI_DEPLOYER]
+      accounts: [process.env.MUMBAI_DEPLOYER],
+      verify: {
+        etherscan: {
+          apiKey: process.env.POLYGONSCAN_API_KEY
+        }
+      }
     }
   },
   solidity: {
@@ -75,7 +80,7 @@ module.exports = {
       hardhat: 0
     },
     dysChildPolygon: {
-      polygon: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
+      polygon: '0xEe3f542eA3dAf6fcD901911C4e6a359EF126b54a',
       polygonMumbai: '0x4EA658c98cfa7446deb80B3d03713321c6D1A6b4'
     },
     nullAddress: {
@@ -84,13 +89,13 @@ module.exports = {
   },
   gasReporter: {
     enabled: true
-  },
-  etherscan: {
-    apiKey: {
-      mainnet: process.env.ETHERSCAN_API_KEY,
-      goerli: process.env.ETHERSCAN_API_KEY,
-      polygon: process.env.POLYGONSCAN_API_KEY,
-      polygonMumbai: process.env.POLYGONSCAN_API_KEY
-    }
   }
+  // etherscan: {
+  //   apiKey: {
+  //     mainnet: process.env.ETHERSCAN_API_KEY,
+  //     goerli: process.env.ETHERSCAN_API_KEY,
+  //     polygon: process.env.POLYGONSCAN_API_KEY,
+  //     polygonMumbai: process.env.POLYGONSCAN_API_KEY
+  //   }
+  // }
 };

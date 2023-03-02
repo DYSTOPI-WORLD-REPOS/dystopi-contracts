@@ -53,15 +53,17 @@ const createPurchaseParams = (
   privateKey = mockPrivateKey
 ) => {
   const nonce = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+  const receiptIds = assetIds.map(() => Math.floor(Math.random() * 100000 + 1));
 
   const hash = web3.utils.soliditySha3Raw(
     { type: 'address', value: sender },
     { type: 'uint256[]', value: assetIds },
     { type: 'uint256[]', value: qtys },
+    { type: 'uint256[]', value: receiptIds },
     { type: 'bytes32', value: nonce }
   );
   const { signature, messageHash } = web3.eth.accounts.sign(hash, privateKey);
-  return [assetIds, qtys, nonce, messageHash, signature];
+  return [assetIds, qtys, receiptIds, nonce, messageHash, signature];
 };
 
 describe('InGameAssetMarketplace', () => {
@@ -158,12 +160,16 @@ describe('InGameAssetMarketplace', () => {
 
   describe('purchase', () => {
     it('should purchase one with only ETH', async () => {
-      const promise = inGameAssetMarketplaceUser.purchase(
-        ...createPurchaseParams(user.address, [assets[2].assetId], [1]),
-        {
-          value: ethers.BigNumber.from(assets[2].ethPrice)
-        }
+      const params = createPurchaseParams(
+        user.address,
+        [assets[2].assetId],
+        [1]
       );
+
+      const promise = inGameAssetMarketplaceUser.purchase(...params, {
+        value: ethers.BigNumber.from(assets[2].ethPrice)
+      });
+
       await expect(() => promise).changeEtherBalances(
         [user, inGameAssetMarketplace],
         [
@@ -174,13 +180,18 @@ describe('InGameAssetMarketplace', () => {
 
       await expect(promise)
         .to.emit(inGameAssetMarketplace, 'AssetPurchased')
-        .withArgs(user.address, assets[2].assetId, 1);
+        .withArgs(user.address, assets[2].assetId, 1, params[2][0]);
     });
 
     it('should purchase one with only ERC20', async () => {
-      const promise = inGameAssetMarketplaceUser.purchase(
-        ...createPurchaseParams(user.address, [assets[0].assetId], [1])
+      const params = createPurchaseParams(
+        user.address,
+        [assets[0].assetId],
+        [1]
       );
+
+      const promise = inGameAssetMarketplaceUser.purchase(...params);
+
       await expect(() => promise).changeTokenBalances(
         erc20_1,
         [user, inGameAssetMarketplace],
@@ -192,7 +203,7 @@ describe('InGameAssetMarketplace', () => {
 
       await expect(promise)
         .to.emit(inGameAssetMarketplace, 'AssetPurchased')
-        .withArgs(user.address, assets[0].assetId, 1);
+        .withArgs(user.address, assets[0].assetId, 1, params[2][0]);
     });
 
     it('should purchase several with both ETH and ERC20', async () => {
@@ -210,17 +221,21 @@ describe('InGameAssetMarketplace', () => {
         boughtForErc20_2
       );
 
-      const func = () =>
-        inGameAssetMarketplaceUser.purchase(
-          ...createPurchaseParams(
-            user.address,
-            [assets[0].assetId, assets[1].assetId, assets[2].assetId],
-            [boughtForErc20_1, boughtForErc20_2, boughtForEth]
-          ),
-          {
-            value: ethSpent
-          }
+      const createParams = () =>
+        createPurchaseParams(
+          user.address,
+          [assets[0].assetId, assets[1].assetId, assets[2].assetId],
+          [boughtForErc20_1, boughtForErc20_2, boughtForEth]
         );
+
+      const func = (_params) => {
+        if (!_params) {
+          _params = createParams();
+        }
+        return inGameAssetMarketplaceUser.purchase(..._params, {
+          value: ethSpent
+        });
+      };
 
       await expect(func).changeEtherBalances(
         [user, inGameAssetMarketplace],
@@ -239,19 +254,30 @@ describe('InGameAssetMarketplace', () => {
         [spent2.mul(-1), spent2]
       );
 
-      const promise = func();
+      const params = createParams();
+      const promise = func(params);
 
       await expect(promise)
         .to.emit(inGameAssetMarketplace, 'AssetPurchased')
-        .withArgs(user.address, assets[0].assetId, boughtForErc20_1);
+        .withArgs(
+          user.address,
+          assets[0].assetId,
+          boughtForErc20_1,
+          params[2][0]
+        );
 
       await expect(promise)
         .to.emit(inGameAssetMarketplace, 'AssetPurchased')
-        .withArgs(user.address, assets[1].assetId, boughtForErc20_2);
+        .withArgs(
+          user.address,
+          assets[1].assetId,
+          boughtForErc20_2,
+          params[2][1]
+        );
 
       await expect(promise)
         .to.emit(inGameAssetMarketplace, 'AssetPurchased')
-        .withArgs(user.address, assets[2].assetId, boughtForEth);
+        .withArgs(user.address, assets[2].assetId, boughtForEth, params[2][2]);
     });
 
     it('should revert if the user does not have enough ETH', async () => {

@@ -30,12 +30,13 @@ contract InGameAssetMarketplace is
         bool active;
     }
 
-    event AssetActivation(uint assetId, bool active);
+    event AssetActivation(uint indexed assetId, bool active);
 
     event AssetPurchased(
         address indexed buyer,
         uint indexed assetId,
-        uint qty
+        uint qty,
+        uint indexed receiptId
     );
 
     // assetId => Asset
@@ -64,6 +65,7 @@ contract InGameAssetMarketplace is
     function purchase(
         uint[] calldata assetIds,
         uint[] calldata qtys,
+        uint[] calldata receiptIds,
         bytes32 nonce,
         bytes32 hash,
         bytes memory signature
@@ -85,7 +87,7 @@ contract InGameAssetMarketplace is
             "InGameAssetMarketplace: Message was not signed by signer"
         );
         require(
-            hash == hashTransaction(_msgSender(), assetIds, qtys, nonce),
+            hash == hashTransaction(_msgSender(), assetIds, qtys, receiptIds, nonce),
             "InGameAssetMarketplace: Hash mismatch"
         );
 
@@ -117,7 +119,7 @@ contract InGameAssetMarketplace is
                 }
             }
 
-            emit AssetPurchased(_msgSender(), assetIds[i], qtys[i]);
+            emit AssetPurchased(_msgSender(), assetIds[i], qtys[i], receiptIds[i]);
         }
 
         require(ethPriceTotal == msg.value, "InGameAssetMarketplace: ETH price mismatch");
@@ -182,11 +184,12 @@ contract InGameAssetMarketplace is
         address sender,
         uint[] calldata assetIds,
         uint[] calldata qtys,
+        uint[] calldata receiptIds,
         bytes32 nonce
     ) internal pure returns(bytes32) {
         bytes32 hash = keccak256(abi.encodePacked(
                 "\x19Ethereum Signed Message:\n32",
-                keccak256(abi.encodePacked(sender, assetIds, qtys, nonce)))
+                keccak256(abi.encodePacked(sender, assetIds, qtys, receiptIds, nonce)))
         );
 
         return hash;

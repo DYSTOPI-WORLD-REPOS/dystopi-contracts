@@ -13,4 +13,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   });
 };
 
-module.exports.tags = [DEPLOY_TAGS.actions.deployDysToken, DEPLOY_TAGS.token];
+module.exports.tags = [
+  DEPLOY_TAGS.actions.deployDysToken,
+  DEPLOY_TAGS.groups.token
+];

@@ -14,6 +14,16 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract DYSVesting is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
+    struct VestingScheduleIn {
+        address beneficiary;
+        uint256 start;
+        uint256 cliffDelta;
+        uint256 duration;
+        uint256 slicePeriodSeconds;
+        bool revocable;
+        uint256 amount;
+    }
+
     struct VestingSchedule {
         bool initialized;
         // beneficiary of tokens after they are released
@@ -167,6 +177,26 @@ contract DYSVesting is Ownable, ReentrancyGuard {
         _vestingSchedulesTotalAmount += amount;
         _vestingSchedulesIds.push(vestingScheduleId);
         _holdersVestingCount[beneficiary] += 1;
+    }
+
+    /**
+    * @notice Creates vesting schedules in batch
+    * @param vestingSchedulesIn array of vesting schedules to create
+    */
+    function createVestingSchedules(
+        VestingScheduleIn[] calldata vestingSchedulesIn
+    ) external onlyOwner {
+        for (uint256 i = 0; i < vestingSchedulesIn.length; i++) {
+            createVestingSchedule(
+                vestingSchedulesIn[i].beneficiary,
+                vestingSchedulesIn[i].start,
+                vestingSchedulesIn[i].cliffDelta,
+                vestingSchedulesIn[i].duration,
+                vestingSchedulesIn[i].slicePeriodSeconds,
+                vestingSchedulesIn[i].revocable,
+                vestingSchedulesIn[i].amount
+            );
+        }
     }
 
     /**
