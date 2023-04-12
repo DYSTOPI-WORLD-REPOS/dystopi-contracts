@@ -21,7 +21,12 @@ module.exports = {
     },
     polygon: {
       url: process.env.POLYGON_URL,
-      accounts: [process.env.POLYGON_DEPLOYER]
+      accounts: [process.env.POLYGON_DEPLOYER],
+      verify: {
+        etherscan: {
+          apiKey: process.env.POLYGONSCAN_API_KEY
+        }
+      }
     },
     polygonMumbai: {
       url: process.env.MUMBAI_URL,

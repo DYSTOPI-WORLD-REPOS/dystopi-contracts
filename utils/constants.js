@@ -16,7 +16,8 @@ module.exports = {
       token: 'token',
       vesting: 'vesting',
       items: 'items',
-      marketplace: 'marketplace'
+      marketplace: 'marketplace',
+      vest: 'vest'
     },
     actions: {
       // deploy
@@ -27,7 +28,9 @@ module.exports = {
       deployInGameAssetMarketplace: 'deployInGameAssetMarketplace',
       // set
       setMarketplaceAsInGameItemMinter: 'setMarketplaceAsInGameItemMinter',
-      setPrivateRoundVesting: 'setPrivateRoundVesting'
+      setPrivateRoundVesting: 'setPrivateRoundVesting',
+      // execute
+      executePrivateRoundVesting: 'executePrivateRoundVesting'
     }
   },
   CONTRACTS: {
