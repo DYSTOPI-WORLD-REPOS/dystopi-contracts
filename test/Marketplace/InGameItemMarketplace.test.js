@@ -4,7 +4,12 @@ const {
   NULL_ADDRESS,
   mockSigner,
   mockPrivateKey,
-  mockPrivateKey2
+  mockPrivateKey2,
+  MINTER_ROLE,
+  STORE_ADMIN_ROLE,
+  BENEFICIARY_ROLE,
+  DEFAULT_ADMIN_ROLE,
+  PAUSER_ROLE
 } = require('../utils/constants');
 const { keccak256, toUtf8Bytes } = ethers.utils;
 const Web3 = require('web3');
@@ -149,16 +154,6 @@ describe('InGameItemMarketplace', () => {
   let storeAdmin;
   let user;
 
-  const DEFAULT_ADMIN_ROLE = NULL_ADDRESS;
-  const PAUSER_ROLE = keccak256(toUtf8Bytes('PAUSER_ROLE')).toLowerCase();
-  const STORE_ADMIN_ROLE = keccak256(
-    toUtf8Bytes('STORE_ADMIN_ROLE')
-  ).toLowerCase();
-  const BENEFICIARY_ROLE = keccak256(
-    toUtf8Bytes('BENEFICIARY_ROLE')
-  ).toLowerCase();
-  const MINTE_ROLE = keccak256(toUtf8Bytes('MINTER_ROLE')).toLowerCase();
-
   before(async () => {
     InGameItemMarketplaceFactory = await ethers.getContractFactory(
       'InGameItemMarketplace'
@@ -206,7 +201,10 @@ describe('InGameItemMarketplace', () => {
     inGameItemMarketplaceUser = await inGameItemMarketplace.connect(user);
 
     // granting MINTE_ROLE to inGameItemMarketplace
-    await inGameItemsAdmin.grantRole(MINTE_ROLE, inGameItemMarketplace.address);
+    await inGameItemsAdmin.grantRole(
+      MINTER_ROLE,
+      inGameItemMarketplace.address
+    );
 
     erc20_1 = await MockERC20.deploy(
       'ERC20 Token 1',
@@ -533,8 +531,15 @@ describe('InGameItemMarketplace', () => {
         ]);
 
         await expect(addSeriesToMarketplacePromise)
-          .to.emit(inGameItemMarketplace, 'ItemSeriesActivation')
-          .withArgs(series.itemId, series.itemSeriesId, series.active);
+          .to.emit(inGameItemMarketplace, 'ItemSeriesPricingUpdated')
+          .withArgs(
+            series.itemId,
+            series.itemSeriesId,
+            series.ethPrice,
+            series.erc20Price,
+            series.erc20Address,
+            series.active
+          );
       }
     });
 

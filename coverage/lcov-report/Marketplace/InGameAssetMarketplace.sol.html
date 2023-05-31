@@ -259,7 +259,35 @@
 214
 215
 216
-217</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -320,6 +348,7 @@
 <span class="cline-any cline-yes">84×</span>
 <span class="cline-any cline-yes">84×</span>
 <span class="cline-any cline-yes">84×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -404,6 +433,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3×</span>
 <span class="cline-any cline-yes">7×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -412,7 +447,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -420,7 +457,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -437,6 +474,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -507,12 +549,19 @@ contract InGameAssetMarketplace is
         bool active;
     }
 &nbsp;
-    event AssetActivation(uint assetId, bool active);
+    event AssetUpdated(
+        uint assetId,
+        uint ethPrice,
+        uint erc20Price,
+        address erc20Address,
+        bool active
+    );
 &nbsp;
     event AssetPurchased(
         address indexed buyer,
         uint indexed assetId,
-        uint qty
+        uint qty,
+        uint indexed receiptId
     );
 &nbsp;
     // assetId =&gt; Asset
@@ -541,6 +590,7 @@ contract InGameAssetMarketplace is
     function purchase(
         uint[] calldata assetIds,
         uint[] calldata qtys,
+        uint[] calldata receiptIds,
         bytes32 nonce,
         bytes32 hash,
         bytes memory signature
@@ -562,7 +612,7 @@ contract InGameAssetMarketplace is
             "InGameAssetMarketplace: Message was not signed by signer"
         );
         require(
-            hash == hashTransaction(_msgSender(), assetIds, qtys, nonce),
+            hash == hashTransaction(_msgSender(), assetIds, qtys, receiptIds, nonce),
             "InGameAssetMarketplace: Hash mismatch"
         );
 &nbsp;
@@ -594,7 +644,7 @@ contract InGameAssetMarketplace is
                 }
             }
 &nbsp;
-            emit AssetPurchased(_msgSender(), assetIds[i], qtys[i]);
+            emit AssetPurchased(_msgSender(), assetIds[i], qtys[i], receiptIds[i]);
         }
 &nbsp;
         require(ethPriceTotal == msg.value, "InGameAssetMarketplace: ETH price mismatch");
@@ -615,7 +665,13 @@ contract InGameAssetMarketplace is
             );
             assetMap[assets[i].assetId] = assets[i];
 &nbsp;
-            emit AssetActivation(assets[i].assetId, assets[i].active);
+            emit AssetUpdated(
+                assets[i].assetId,
+                assets[i].ethPrice,
+                assets[i].erc20Price,
+                assets[i].erc20Address,
+                assets[i].active
+            );
         }
     }
 &nbsp;
@@ -623,7 +679,13 @@ contract InGameAssetMarketplace is
         for (uint i = 0; i &lt; assetIds.length; i++) {
             assetMap[assetIds[i]].active = active;
 &nbsp;
-            emit AssetActivation(assetIds[i], active);
+            emit AssetUpdated(
+                assetMap[assetIds[i]].assetId,
+                assetMap[assetIds[i]].ethPrice,
+                assetMap[assetIds[i]].erc20Price,
+                assetMap[assetIds[i]].erc20Address,
+                active
+            );
         }
     }
 &nbsp;
@@ -659,11 +721,12 @@ contract InGameAssetMarketplace is
         address sender,
         uint[] calldata assetIds,
         uint[] calldata qtys,
+        uint[] calldata receiptIds,
         bytes32 nonce
     ) internal pure returns(bytes32) {
         bytes32 hash = keccak256(abi.encodePacked(
                 "\x19Ethereum Signed Message:\n32",
-                keccak256(abi.encodePacked(sender, assetIds, qtys, nonce)))
+                keccak256(abi.encodePacked(sender, assetIds, qtys, receiptIds, nonce)))
         );
 &nbsp;
         return hash;
@@ -697,7 +760,7 @@ contract InGameAssetMarketplace is
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Feb 14 2023 13:47:32 GMT+0100 (Central European Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed May 31 2023 18:09:11 GMT+0200 (Central European Summer Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

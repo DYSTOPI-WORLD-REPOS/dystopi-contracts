@@ -1,0 +1,26 @@
+[
+  {
+    "itemId": 1,
+    "itemSeriesId": 0,
+    "erc20Address": "0x0000000000000000000000000000000000000000",
+    "active": true,
+    "erc20Price": 0,
+    "ethPrice": "10000000000000000"
+  },
+  {
+    "itemId": 2,
+    "itemSeriesId": 0,
+    "erc20Address": "0x0000000000000000000000000000000000000000",
+    "active": true,
+    "erc20Price": 0,
+    "ethPrice": "10000000000000000"
+  },
+  {
+    "itemId": 3,
+    "itemSeriesId": 0,
+    "erc20Address": "0x0000000000000000000000000000000000000000",
+    "active": true,
+    "erc20Price": 0,
+    "ethPrice": "10000000000000000"
+  }
+]

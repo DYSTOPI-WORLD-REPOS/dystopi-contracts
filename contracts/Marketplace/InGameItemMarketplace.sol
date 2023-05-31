@@ -48,9 +48,12 @@ contract InGameItemMarketplace is
     // signer for signature verification
     address internal _signer;
 
-    event ItemSeriesActivation(
-        uint indexed itemId,
-        uint indexed itemSeriesId,
+    event ItemSeriesPricingUpdated(
+        uint itemId,
+        uint itemSeriesId,
+        uint ethPrice,
+        uint erc20Price,
+        address erc20Address,
         bool active
     );
 
@@ -171,9 +174,12 @@ contract InGameItemMarketplace is
                 itemSeriesForItemId.push(newItemSeriesPricing);
             }
 
-            emit ItemSeriesActivation(
+            emit ItemSeriesPricingUpdated(
                 currentItemSeriesPricingIn.itemId,
                 currentItemSeriesPricingIn.itemSeriesId,
+                currentItemSeriesPricingIn.ethPrice,
+                currentItemSeriesPricingIn.erc20Price,
+                currentItemSeriesPricingIn.erc20Address,
                 currentItemSeriesPricingIn.active
             );
         }
@@ -190,9 +196,12 @@ contract InGameItemMarketplace is
             ItemSeriesPricing storage currentItemSeriesPricing = itemSeriesPricingMap[itemIds[i]][itemSeriesIds[i]];
             currentItemSeriesPricing.active = active;
 
-            emit ItemSeriesActivation(
+            emit ItemSeriesPricingUpdated(
                 itemIds[i],
                 itemSeriesIds[i],
+                currentItemSeriesPricing.ethPrice,
+                currentItemSeriesPricing.erc20Price,
+                currentItemSeriesPricing.erc20Address,
                 active
             );
         }

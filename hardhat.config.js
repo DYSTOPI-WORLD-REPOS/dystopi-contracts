@@ -6,6 +6,7 @@ require('hardhat-deploy');
 require('@nomiclabs/hardhat-waffle');
 require('solidity-coverage');
 require('@openzeppelin/hardhat-upgrades');
+require('@nomicfoundation/hardhat-chai-matchers');
 
 module.exports = {
   defaultNetwork: 'hardhat',

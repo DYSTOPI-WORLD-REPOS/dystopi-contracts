@@ -1,6 +1,12 @@
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
-const { NULL_ADDRESS } = require('../utils/constants');
+const {
+  NULL_ADDRESS,
+  ITEM_ADMIN_ROLE,
+  MINTER_ROLE,
+  PAUSER_ROLE,
+  DEFAULT_ADMIN_ROLE
+} = require('../utils/constants');
 const { keccak256, toUtf8Bytes } = ethers.utils;
 
 function randomIntFromInterval(min, max) {
@@ -22,13 +28,6 @@ describe('InGameItems', () => {
   let minter;
   let itemAdmin;
   let user;
-
-  const DEFAULT_ADMIN_ROLE = NULL_ADDRESS;
-  const PAUSER_ROLE = keccak256(toUtf8Bytes('PAUSER_ROLE')).toLowerCase();
-  const ITEM_ADMIN_ROLE = keccak256(
-    toUtf8Bytes('ITEM_ADMIN_ROLE')
-  ).toLowerCase();
-  const MINTER_ROLE = keccak256(toUtf8Bytes('MINTER_ROLE')).toLowerCase();
 
   before(async () => {
     InGameItemsFactory = await ethers.getContractFactory('InGameItems');
@@ -121,6 +120,13 @@ describe('InGameItems', () => {
     it('should revert if not called by item admin', async () => {
       await expect(inGameItemsUser.setupItems([])).to.be.revertedWith(
         `AccessControl: account ${user.address.toLowerCase()} is missing role ${ITEM_ADMIN_ROLE}`
+      );
+    });
+    it('should revert if item already exists', async () => {
+      const itemsIn = [generateItem(1, randomIntFromInterval(1, 5), 1)];
+      await inGameItemsItemAdmin.setupItems(itemsIn);
+      await expect(inGameItemsItemAdmin.setupItems(itemsIn)).to.be.revertedWith(
+        'InGameItems: Item already exists'
       );
     });
   });

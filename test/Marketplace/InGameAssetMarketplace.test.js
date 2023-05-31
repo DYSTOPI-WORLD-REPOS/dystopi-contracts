@@ -4,7 +4,11 @@ const {
   NULL_ADDRESS,
   mockSigner,
   mockPrivateKey,
-  mockPrivateKey2
+  mockPrivateKey2,
+  BENEFICIARY_ROLE,
+  DEFAULT_ADMIN_ROLE,
+  STORE_ADMIN_ROLE,
+  PAUSER_ROLE
 } = require('../utils/constants');
 const { keccak256, toUtf8Bytes } = ethers.utils;
 const Web3 = require('web3');
@@ -85,15 +89,6 @@ describe('InGameAssetMarketplace', () => {
   let beneficiary;
   let storeAdmin;
   let user;
-
-  const DEFAULT_ADMIN_ROLE = NULL_ADDRESS;
-  const PAUSER_ROLE = keccak256(toUtf8Bytes('PAUSER_ROLE')).toLowerCase();
-  const STORE_ADMIN_ROLE = keccak256(
-    toUtf8Bytes('STORE_ADMIN_ROLE')
-  ).toLowerCase();
-  const BENEFICIARY_ROLE = keccak256(
-    toUtf8Bytes('BENEFICIARY_ROLE')
-  ).toLowerCase();
 
   before(async () => {
     InGameAssetMarketplaceFactory = await ethers.getContractFactory(
@@ -413,8 +408,14 @@ describe('InGameAssetMarketplace', () => {
         ]);
 
         await expect(addAssetsPromise)
-          .to.emit(inGameAssetMarketplace, 'AssetActivation')
-          .withArgs(asset.assetId, asset.active);
+          .to.emit(inGameAssetMarketplace, 'AssetUpdated')
+          .withArgs(
+            asset.assetId,
+            asset.ethPrice,
+            asset.erc20Price,
+            asset.erc20Address,
+            asset.active
+          );
       }
     });
 
@@ -446,8 +447,14 @@ describe('InGameAssetMarketplace', () => {
 
       for await (const asset of assets) {
         await expect(promise)
-          .to.emit(inGameAssetMarketplace, 'AssetActivation')
-          .withArgs(asset.assetId, false);
+          .to.emit(inGameAssetMarketplace, 'AssetUpdated')
+          .withArgs(
+            asset.assetId,
+            asset.ethPrice,
+            asset.erc20Price,
+            asset.erc20Address,
+            false
+          );
       }
 
       await promise;
@@ -466,8 +473,14 @@ describe('InGameAssetMarketplace', () => {
 
       for await (const asset of assets) {
         await expect(promise2)
-          .to.emit(inGameAssetMarketplace, 'AssetActivation')
-          .withArgs(asset.assetId, true);
+          .to.emit(inGameAssetMarketplace, 'AssetUpdated')
+          .withArgs(
+            asset.assetId,
+            asset.ethPrice,
+            asset.erc20Price,
+            asset.erc20Address,
+            true
+          );
       }
 
       await promise2;

@@ -17,7 +17,8 @@ module.exports = {
       vesting: 'vesting',
       items: 'items',
       marketplace: 'marketplace',
-      vest: 'vest'
+      vest: 'vest',
+      _testItems: '_testItems'
     },
     actions: {
       // deploy
@@ -29,6 +30,7 @@ module.exports = {
       // set
       setMarketplaceAsInGameItemMinter: 'setMarketplaceAsInGameItemMinter',
       setPrivateRoundVesting: 'setPrivateRoundVesting',
+      _setTestItems: '_setTestItems',
       // execute
       executePrivateRoundVesting: 'executePrivateRoundVesting'
     }

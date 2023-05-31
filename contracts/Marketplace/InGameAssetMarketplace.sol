@@ -30,7 +30,13 @@ contract InGameAssetMarketplace is
         bool active;
     }
 
-    event AssetActivation(uint indexed assetId, bool active);
+    event AssetUpdated(
+        uint assetId,
+        uint ethPrice,
+        uint erc20Price,
+        address erc20Address,
+        bool active
+    );
 
     event AssetPurchased(
         address indexed buyer,
@@ -140,7 +146,13 @@ contract InGameAssetMarketplace is
             );
             assetMap[assets[i].assetId] = assets[i];
 
-            emit AssetActivation(assets[i].assetId, assets[i].active);
+            emit AssetUpdated(
+                assets[i].assetId,
+                assets[i].ethPrice,
+                assets[i].erc20Price,
+                assets[i].erc20Address,
+                assets[i].active
+            );
         }
     }
 
@@ -148,7 +160,13 @@ contract InGameAssetMarketplace is
         for (uint i = 0; i < assetIds.length; i++) {
             assetMap[assetIds[i]].active = active;
 
-            emit AssetActivation(assetIds[i], active);
+            emit AssetUpdated(
+                assetMap[assetIds[i]].assetId,
+                assetMap[assetIds[i]].ethPrice,
+                assetMap[assetIds[i]].erc20Price,
+                assetMap[assetIds[i]].erc20Address,
+                active
+            );
         }
     }
 
