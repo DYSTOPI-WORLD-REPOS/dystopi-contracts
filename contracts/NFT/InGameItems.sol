@@ -35,6 +35,13 @@ contract InGameItems is
     // counter for auto-incremented ids
     uint public lastOccupiedTokenId;
 
+    event ItemUpdated(
+        uint indexed itemId,
+        uint itemType,
+        uint slots,
+        uint rarity
+    );
+
     event ItemSeriesAdded(
         uint indexed itemId,
         uint indexed itemSeriesId,
@@ -99,6 +106,7 @@ contract InGameItems is
             require(item.itemId > 0, "InGameItems: Item id must be greater than 0");
             require(item.itemType > 0, "InGameItems: Item type must be greater than 0");
             items[item.itemId] = item;
+            emit ItemUpdated(item.itemId, item.itemType, item.slots, item.rarity);
         }
     }
 

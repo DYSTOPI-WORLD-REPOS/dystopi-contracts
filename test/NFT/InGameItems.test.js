@@ -58,17 +58,19 @@ describe('InGameItems', () => {
   const generateItem = (itemId, itemType, slots) => ({
     itemId,
     itemType,
-    slots
+    slots,
+    rarity: randomIntFromInterval(1, 5)
   });
 
   const generateRandomItemSeries = (
-    { itemId, itemType, slots },
+    { itemId, itemType, slots, rarity },
     itemSeriesId
   ) => ({
     itemId,
     itemSeriesId,
     itemType,
     slots,
+    rarity,
     editionSize: randomIntFromInterval(5, 100)
   });
 
@@ -120,13 +122,6 @@ describe('InGameItems', () => {
     it('should revert if not called by item admin', async () => {
       await expect(inGameItemsUser.setupItems([])).to.be.revertedWith(
         `AccessControl: account ${user.address.toLowerCase()} is missing role ${ITEM_ADMIN_ROLE}`
-      );
-    });
-    it('should revert if item already exists', async () => {
-      const itemsIn = [generateItem(1, randomIntFromInterval(1, 5), 1)];
-      await inGameItemsItemAdmin.setupItems(itemsIn);
-      await expect(inGameItemsItemAdmin.setupItems(itemsIn)).to.be.revertedWith(
-        'InGameItems: Item already exists'
       );
     });
   });

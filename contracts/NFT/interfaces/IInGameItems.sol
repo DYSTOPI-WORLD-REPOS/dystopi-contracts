@@ -6,6 +6,7 @@ interface IInGameItems {
         uint itemId;
         uint itemType;
         uint slots;
+        uint rarity;
     }
 
     struct ItemSeries {
@@ -27,6 +28,7 @@ interface IInGameItems {
         uint itemSeriesId;
         uint itemType;
         uint slots;
+        uint rarity;
         uint startingTokenId;
         uint editionSize;
         uint minted;

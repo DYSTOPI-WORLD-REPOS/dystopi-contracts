@@ -25,6 +25,7 @@ const addSeriesToItemsAndMarketplace = async (
     itemId: 1,
     itemType: 1,
     slots: 2,
+    rarity: 1,
     series: [
       {
         itemSeriesId: 0,
@@ -46,6 +47,7 @@ const addSeriesToItemsAndMarketplace = async (
     itemId: 2,
     itemType: 4,
     slots: 3,
+    rarity: 2,
     series: [
       {
         itemSeriesId: 0,
@@ -60,6 +62,7 @@ const addSeriesToItemsAndMarketplace = async (
     itemId: 3,
     itemType: 2,
     slots: 1,
+    rarity: 1,
     series: [
       {
         itemSeriesId: 0,
@@ -79,7 +82,8 @@ const addSeriesToItemsAndMarketplace = async (
     inGameItemsItems.push({
       itemId: item.itemId,
       itemType: item.itemType,
-      slots: item.slots
+      slots: item.slots,
+      rarity: item.rarity
     });
     for (const series of item.series) {
       inGameItemsSeries.push({
