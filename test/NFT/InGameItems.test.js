@@ -7,12 +7,11 @@ const {
   PAUSER_ROLE,
   DEFAULT_ADMIN_ROLE
 } = require('../utils/constants');
-const { keccak256, toUtf8Bytes } = ethers.utils;
-
-function randomIntFromInterval(min, max) {
-  // min and max included
-  return Math.floor(Math.random() * (max - min + 1) + min);
-}
+const {
+  randomIntFromInterval,
+  generateItem,
+  generateRandomItemSeries
+} = require('../utils/helpers');
 
 describe('InGameItems', () => {
   let InGameItemsFactory;
@@ -53,25 +52,6 @@ describe('InGameItems', () => {
     inGameItemsPauser = inGameItems.connect(pauser);
     inGameItemsMinter = inGameItems.connect(minter);
     inGameItemsUser = inGameItems.connect(user);
-  });
-
-  const generateItem = (itemId, itemType, slots) => ({
-    itemId,
-    itemType,
-    slots,
-    rarity: randomIntFromInterval(1, 5)
-  });
-
-  const generateRandomItemSeries = (
-    { itemId, itemType, slots, rarity },
-    itemSeriesId
-  ) => ({
-    itemId,
-    itemSeriesId,
-    itemType,
-    slots,
-    rarity,
-    editionSize: randomIntFromInterval(5, 100)
   });
 
   const addRandomItems = async () => {
@@ -124,6 +104,13 @@ describe('InGameItems', () => {
         `AccessControl: account ${user.address.toLowerCase()} is missing role ${ITEM_ADMIN_ROLE}`
       );
     });
+    /*it('should revert if item already exists', async () => {
+      const itemsIn = [generateItem(1, randomIntFromInterval(1, 5), 1)];
+      await inGameItemsItemAdmin.setupItems(itemsIn);
+      await expect(inGameItemsItemAdmin.setupItems(itemsIn)).to.be.revertedWith(
+        'InGameItems: Item already exists'
+      );
+    });*/
   });
 
   describe('setupItemSeries', () => {
@@ -267,6 +254,25 @@ describe('InGameItems', () => {
           .to.emit(inGameItemsMinter, 'Transfer')
           .withArgs(NULL_ADDRESS, user.address, i);
       }
+    });
+
+    it('mints 2 of 1 series, assigns the right ids', async () => {
+      const [itemsIn, seriesIn] = await addRandomItems();
+
+      const promise = inGameItemsMinter.mint(
+        user.address,
+        [seriesIn[0].itemId],
+        [seriesIn[0].itemSeriesId],
+        [1]
+      );
+
+      await expect(promise)
+        .to.emit(inGameItemsMinter, 'Transfer')
+        .withArgs(NULL_ADDRESS, user.address, 1);
+
+      await expect(promise)
+        .to.emit(inGameItemsMinter, 'Transfer')
+        .withArgs(NULL_ADDRESS, user.address, 1);
     });
 
     it('mints 5 of 5 series', async () => {

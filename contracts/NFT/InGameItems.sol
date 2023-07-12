@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
@@ -14,7 +13,6 @@ import "./interfaces/IInGameItems.sol";
 contract InGameItems is
     IInGameItems,
     Initializable,
-    ERC721Upgradeable,
     ERC721BurnableUpgradeable,
     ERC721WithBaseUriUpgradeable,
     ERC2771Recipient,
@@ -59,8 +57,10 @@ contract InGameItems is
         address trustedForwarder_,
         string memory baseURI_
     ) initializer public {
+        __AccessControl_init();
         __ERC721_init(_name, _symbol);
-        __ERC721WithBaseUriUpgradeable_init(baseURI_);
+        __ERC721Burnable_init();
+        __ERC721WithBaseUri_init(baseURI_);
         __Pausable_init();
 
         // can revoke and assign roles

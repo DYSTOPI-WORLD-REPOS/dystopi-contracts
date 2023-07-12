@@ -7,11 +7,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 contract ERC721WithBaseUriUpgradeable is Initializable, ERC721Upgradeable {
     string public baseURI;
 
-    function __ERC721WithBaseUriUpgradeable_init(string memory baseURI_) internal onlyInitializing {
-        __ERC721WithBaseUriUpgradeable_init_unchained(baseURI_);
+    function __ERC721WithBaseUri_init(string memory baseURI_) internal onlyInitializing {
+        __ERC721WithBaseUri_init_unchained(baseURI_);
     }
 
-    function __ERC721WithBaseUriUpgradeable_init_unchained(string memory baseURI_) internal onlyInitializing {
+    function __ERC721WithBaseUri_init_unchained(string memory baseURI_) internal onlyInitializing {
         _setBaseURI(baseURI_);
     }
 
@@ -22,4 +22,6 @@ contract ERC721WithBaseUriUpgradeable is Initializable, ERC721Upgradeable {
     function _baseURI() internal view override virtual returns (string memory) {
         return baseURI;
     }
+
+    uint[49] private __gap;
 }

@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for NFT/GemRegistry.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">NFT/</a> GemRegistry.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">97.83% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>45/46</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">87.5% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>35/40</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">94.44% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>17/18</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">98.18% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>54/55</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19×</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">65×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">64×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">64×</span>
+<span class="cline-any cline-yes">192×</span>
+<span class="cline-any cline-yes">192×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">64×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37×</span>
+<span class="cline-any cline-yes">37×</span>
+<span class="cline-any cline-yes">37×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">305×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.4;
+&nbsp;
+import "@opengsn/contracts/src/ERC2771Recipient.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "./interfaces/IInGameItems.sol";
+&nbsp;
+contract GemRegistry is Initializable, AccessControlUpgradeable, PausableUpgradeable, ERC2771Recipient {
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant GEM_ADMIN_ROLE = keccak256("GEM_ADMIN_ROLE");
+&nbsp;
+    IInGameItems public inGameItems;
+&nbsp;
+    uint[] internal _gemItemTypes;
+    // gemItemType =&gt; itemType =&gt; isCompatible
+    mapping(uint =&gt; mapping(uint =&gt; bool)) internal _gemCompatibilityMap;
+    // gemItemType =&gt; compatible itemTypes
+    mapping(uint =&gt; uint[]) internal _gemCompatibilityList;
+    // tokenId =&gt; gemTokenId
+    mapping(uint =&gt; uint[]) internal _insertedGems;
+&nbsp;
+    event GemInserted(uint indexed tokenId, uint indexed gemTokenId);
+&nbsp;
+    event GemItemTypeUpdated(uint indexed gemItemType, uint[] compatibleItemTypes);
+&nbsp;
+    function initialize(address admin, address gemAdmin, address pauser, address inGameItemsAddress, address trustedForwarder_) public <span class="missing-if-branch" title="else path not taken" >E</span>initializer {
+        __AccessControl_init();
+        __Pausable_init();
+&nbsp;
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(GEM_ADMIN_ROLE, gemAdmin);
+        _grantRole(PAUSER_ROLE, pauser);
+&nbsp;
+        _setTrustedForwarder(trustedForwarder_);
+&nbsp;
+        inGameItems = IInGameItems(inGameItemsAddress);
+    }
+&nbsp;
+    function insertGem(
+        uint tokenId,
+        uint itemId,
+        uint itemSeriesId,
+        uint gemTokenId,
+        uint gemItemId,
+        uint gemItemSeriesId
+    ) external whenNotPaused {
+        ERC721Burnable inGameItemsERC721 = ERC721Burnable(address(inGameItems));
+&nbsp;
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "GemRegistry: caller is not owner of token");
+        require(_isApprovedOrOwner(_msgSender(), gemTokenId), "GemRegistry: caller is not owner of gem token");
+&nbsp;
+        IInGameItems.ItemSeriesOut memory itemSeries = inGameItems.getItemSeries(itemId, itemSeriesId);
+        IInGameItems.ItemSeriesOut memory gemItemSeries = inGameItems.getItemSeries(gemItemId, gemItemSeriesId);
+&nbsp;
+        require(
+            tokenId &gt;= itemSeries.startingTokenId &amp;&amp; tokenId &lt; itemSeries.startingTokenId + itemSeries.editionSize,
+            "GemRegistry: tokenId is not in item series"
+        );
+        require(
+            gemTokenId &gt;= gemItemSeries.startingTokenId &amp;&amp; gemTokenId &lt; gemItemSeries.startingTokenId + gemItemSeries.editionSize,
+            "GemRegistry: gemTokenId is not in gem item series"
+        );
+        require(
+            _gemCompatibilityMap[gemItemSeries.itemType][itemSeries.itemType],
+            "GemRegistry: gem is not compatible with item"
+        );
+        require(itemSeries.slots &gt; _insertedGems[tokenId].length, "GemRegistry: item has no free slots");
+&nbsp;
+        _insertedGems[tokenId].push(gemTokenId);
+        inGameItemsERC721.burn(gemTokenId);
+&nbsp;
+        emit GemInserted(tokenId, gemTokenId);
+    }
+&nbsp;
+    function setupGemItemType(uint _gemItemType, uint[] memory compatibleItemTypes) public onlyRole(GEM_ADMIN_ROLE) {
+        require(compatibleItemTypes.length &gt; 0, "GemRegistry: compatibleItemTypes must have length &gt; 0");
+&nbsp;
+        if (_gemCompatibilityList[_gemItemType].length == 0) {
+            _gemItemTypes.push(_gemItemType);
+        } else {
+            for (uint i = 0; i &lt; _gemCompatibilityList[_gemItemType].length; i++) {
+                _gemCompatibilityMap[_gemItemType][_gemCompatibilityList[_gemItemType][i]] = false;
+            }
+            delete _gemCompatibilityList[_gemItemType];
+        }
+        for (uint i = 0; i &lt; compatibleItemTypes.length; i++) {
+            _gemCompatibilityMap[_gemItemType][compatibleItemTypes[i]] = true;
+            _gemCompatibilityList[_gemItemType].push(compatibleItemTypes[i]);
+        }
+        emit GemItemTypeUpdated(_gemItemType, compatibleItemTypes);
+    }
+&nbsp;
+    function removeGemItemType(uint _gemItemType) public onlyRole(GEM_ADMIN_ROLE) {
+        require(_gemCompatibilityList[_gemItemType].length &gt; 0, "GemRegistry: gemItemType is not set");
+&nbsp;
+        for (uint i = 0; i &lt; _gemCompatibilityList[_gemItemType].length; i++) {
+            _gemCompatibilityMap[_gemItemType][_gemCompatibilityList[_gemItemType][i]] = false;
+        }
+        delete _gemCompatibilityList[_gemItemType];
+        for (uint i = 0; i &lt; _gemItemTypes.length; i++) {
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (_gemItemTypes[i] == _gemItemType) {
+                _gemItemTypes[i] = _gemItemTypes[_gemItemTypes.length - 1];
+                _gemItemTypes.pop();
+                break;
+            }
+        }
+        emit GemItemTypeUpdated(_gemItemType, new uint[](0));
+    }
+&nbsp;
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+&nbsp;
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+&nbsp;
+    function setTrustedForwarder(address forwarder) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setTrustedForwarder(forwarder);
+    }
+&nbsp;
+    function setInGameItems(address inGameItemsAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        inGameItems = IInGameItems(inGameItemsAddress);
+    }
+&nbsp;
+    function gemItemTypes() public view returns (uint[] memory) {
+        return _gemItemTypes;
+    }
+&nbsp;
+    function gemItemType(uint index) public view returns (uint) {
+        return _gemItemTypes[index];
+    }
+&nbsp;
+    function gemCompatibilityMap(uint _gemItemType, uint itemType) public view returns (bool) {
+        return _gemCompatibilityMap[_gemItemType][itemType];
+    }
+&nbsp;
+    function gemCompatibilityList(uint _gemItemType) public view returns (uint[] memory) {
+        return _gemCompatibilityList[_gemItemType];
+    }
+&nbsp;
+    function gemCompatibilityByIndex(uint _gemItemType, uint index) public view returns (uint) {
+        return _gemCompatibilityList[_gemItemType][index];
+    }
+&nbsp;
+    function insertedGems(uint tokenId) public view returns (uint[] memory) {
+        return _insertedGems[tokenId];
+    }
+&nbsp;
+    function insertedGem(uint tokenId, uint index) public view returns (uint) {
+        return _insertedGems[tokenId][index];
+    }
+&nbsp;
+    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
+        ERC721Burnable inGameItemsERC721 = ERC721Burnable(address(inGameItems));
+        address owner = inGameItemsERC721.ownerOf(tokenId);
+        return spender == owner || <span class="branch-1 cbranch-no" title="branch not covered" >inGameItemsERC721.getApproved(tokenId) == spender</span> || inGameItemsERC721.isApprovedForAll(owner, spender);
+    }
+&nbsp;
+    function _msgSender()
+    internal
+    view
+    override(ContextUpgradeable, ERC2771Recipient)
+    returns (address)
+    {
+        return ERC2771Recipient._msgSender();
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _msgData()</span>
+    internal
+    view
+    override(ContextUpgradeable, ERC2771Recipient)
+    returns (bytes calldata)
+    {
+<span class="cstat-no" title="statement not covered" >        return ERC2771Recipient._msgData();</span>
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Jul 12 2023 18:37:53 GMT+0200 (Central European Summer Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
