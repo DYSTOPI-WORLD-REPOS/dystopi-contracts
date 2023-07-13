@@ -166,16 +166,22 @@ contract InGameItemMarketplace is
                 "InGameItemMarketplace: Price must be defined in either an ERC20 or ETH"
             );
 
-            ItemSeriesPricing memory newItemSeriesPricing;
-            newItemSeriesPricing.active = currentItemSeriesPricingIn.active;
-            newItemSeriesPricing.ethPrice = currentItemSeriesPricingIn.ethPrice;
-            newItemSeriesPricing.erc20Address = currentItemSeriesPricingIn.erc20Address;
-            newItemSeriesPricing.erc20Price = currentItemSeriesPricingIn.erc20Price;
-
             if (currentItemSeriesPricingIn.itemSeriesId < itemSeriesForItemId.length) {
-                itemSeriesForItemId[currentItemSeriesPricingIn.itemSeriesId] = newItemSeriesPricing;
+                itemSeriesForItemId[currentItemSeriesPricingIn.itemSeriesId] = ItemSeriesPricing(
+                    currentItemSeriesPricingIn.ethPrice,
+                    currentItemSeriesPricingIn.erc20Price,
+                    currentItemSeriesPricingIn.erc20Address,
+                    currentItemSeriesPricingIn.active
+                );
             } else {
-                itemSeriesForItemId.push(newItemSeriesPricing);
+                itemSeriesForItemId.push(
+                    ItemSeriesPricing(
+                        currentItemSeriesPricingIn.ethPrice,
+                        currentItemSeriesPricingIn.erc20Price,
+                        currentItemSeriesPricingIn.erc20Address,
+                        currentItemSeriesPricingIn.active
+                    )
+                );
             }
 
             emit ItemSeriesPricingUpdated(

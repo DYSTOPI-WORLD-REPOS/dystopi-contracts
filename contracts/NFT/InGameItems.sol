@@ -131,19 +131,23 @@ contract InGameItems is
 
             lastOccupiedTokenId += currentItemSeriesIn.editionSize;
 
-            ItemSeries memory currentItemSeries;
-            currentItemSeries.startingTokenId = lastOccupiedTokenId - currentItemSeriesIn.editionSize + 1;
-            currentItemSeries.editionSize = currentItemSeriesIn.editionSize;
-            currentItemSeries.itemId = currentItemSeriesIn.itemId;
-            currentItemSeries.itemSeriesId = currentItemSeriesIn.itemSeriesId;
+            uint startingTokenId = lastOccupiedTokenId - currentItemSeriesIn.editionSize + 1;
 
-            itemSeriesMap[currentItemSeries.itemId].push(currentItemSeries);
+            itemSeriesMap[currentItemSeriesIn.itemId].push(
+                ItemSeries(
+                    currentItemSeriesIn.itemId,
+                    currentItemSeriesIn.itemSeriesId,
+                    startingTokenId,
+                    currentItemSeriesIn.editionSize,
+                    0
+                )
+            );
 
             emit ItemSeriesAdded(
-                currentItemSeries.itemId,
+                currentItemSeriesIn.itemId,
                 currentItemSeriesIn.itemSeriesId,
-                currentItemSeries.startingTokenId,
-                currentItemSeries.editionSize
+                startingTokenId,
+                currentItemSeriesIn.editionSize
             );
         }
     }

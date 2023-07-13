@@ -960,9 +960,9 @@
         }
       }
     },
-    "5f6d879497de0e549fee94da3affbb71c17117071417a4744fb550d1cd6e7aa9": {
+    "6386e018c4e5db80fae0e320cdd58cba639d4763c9bcf2dfb30a8262d6bcdde9": {
       "address": "0xCA8c8688914e0F7096c920146cd0Ad85cD7Ae8b9",
-      "txHash": "0x48d400249430624b59db9ac25189c96e0aeca70ddcd91e0f5883067709513ef5",
+      "txHash": "0x31ad440172d9e486760a1a622e1bf1c59ce4da042793cd3d82ce090bebe5d01c",
       "layout": {
         "solcVersion": "0.8.4",
         "storage": [
@@ -1123,7 +1123,7 @@
             "label": "items",
             "offset": 0,
             "slot": "351",
-            "type": "t_mapping(t_uint256,t_struct(Item)4393_storage)",
+            "type": "t_mapping(t_uint256,t_struct(Item)4374_storage)",
             "contract": "InGameItems",
             "src": "contracts/NFT/InGameItems.sol:30"
           },
@@ -1131,7 +1131,7 @@
             "label": "itemSeriesMap",
             "offset": 0,
             "slot": "352",
-            "type": "t_mapping(t_uint256,t_array(t_struct(ItemSeries)4404_storage)dyn_storage)",
+            "type": "t_mapping(t_uint256,t_array(t_struct(ItemSeries)4385_storage)dyn_storage)",
             "contract": "InGameItems",
             "src": "contracts/NFT/InGameItems.sol:32"
           },
@@ -1149,7 +1149,7 @@
             "label": "address",
             "numberOfBytes": "20"
           },
-          "t_array(t_struct(ItemSeries)4404_storage)dyn_storage": {
+          "t_array(t_struct(ItemSeries)4385_storage)dyn_storage": {
             "label": "struct IInGameItems.ItemSeries[]",
             "numberOfBytes": "32"
           },
@@ -1193,11 +1193,11 @@
             "label": "mapping(uint256 => address)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_array(t_struct(ItemSeries)4404_storage)dyn_storage)": {
+          "t_mapping(t_uint256,t_array(t_struct(ItemSeries)4385_storage)dyn_storage)": {
             "label": "mapping(uint256 => struct IInGameItems.ItemSeries[])",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_struct(Item)4393_storage)": {
+          "t_mapping(t_uint256,t_struct(Item)4374_storage)": {
             "label": "mapping(uint256 => struct IInGameItems.Item)",
             "numberOfBytes": "32"
           },
@@ -1205,7 +1205,7 @@
             "label": "string",
             "numberOfBytes": "32"
           },
-          "t_struct(Item)4393_storage": {
+          "t_struct(Item)4374_storage": {
             "label": "struct IInGameItems.Item",
             "members": [
               {
@@ -1235,7 +1235,7 @@
             ],
             "numberOfBytes": "128"
           },
-          "t_struct(ItemSeries)4404_storage": {
+          "t_struct(ItemSeries)4385_storage": {
             "label": "struct IInGameItems.ItemSeries",
             "members": [
               {
