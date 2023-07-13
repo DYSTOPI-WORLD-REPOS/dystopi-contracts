@@ -104,7 +104,7 @@ contract InGameAssetMarketplace is
         for (uint i = 0; i < assetIds.length; i++) {
             require(qtys[i] > 0, "InGameAssetMarketplace: Cannot purchase 0 assets");
 
-            Asset memory asset = assetMap[assetIds[i]];
+            Asset storage asset = assetMap[assetIds[i]];
 
             require(asset.active, "InGameAssetMarketplace: Asset is not active");
 

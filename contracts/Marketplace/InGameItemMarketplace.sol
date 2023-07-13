@@ -111,8 +111,12 @@ contract InGameItemMarketplace is
 
         for (uint i = 0; i < itemIds.length; i++) {
             require(qtys[i] > 0, "InGameItemMarketplace: Cannot purchase 0 tokens");
+            require(
+                itemSeriesPricingMap[itemIds[i]].length > itemSeriesIds[i],
+                "InGameItemMarketplace: Item series ID out of bounds"
+            );
 
-            ItemSeriesPricing memory itemSeriesPricing = getItemSeriesPricing(itemIds[i], itemSeriesIds[i]);
+            ItemSeriesPricing storage itemSeriesPricing = itemSeriesPricingMap[itemIds[i]][itemSeriesIds[i]];
 
             require(itemSeriesPricing.active, "InGameItemMarketplace: Item series is not active");
 
@@ -150,7 +154,7 @@ contract InGameItemMarketplace is
     onlyRole(STORE_ADMIN_ROLE)
     {
         for (uint i = 0; i < itemSeriesPricingIn.length; i++) {
-            ItemSeriesPricingIn memory currentItemSeriesPricingIn = itemSeriesPricingIn[i];
+            ItemSeriesPricingIn calldata currentItemSeriesPricingIn = itemSeriesPricingIn[i];
             ItemSeriesPricing[] storage itemSeriesForItemId = itemSeriesPricingMap[currentItemSeriesPricingIn.itemId];
             require(
                 itemSeriesForItemId.length >= currentItemSeriesPricingIn.itemSeriesId,

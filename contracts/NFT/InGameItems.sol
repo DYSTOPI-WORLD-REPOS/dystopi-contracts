@@ -112,7 +112,7 @@ contract InGameItems is
 
     function setupItemSeries(ItemSeriesIn[] calldata itemSeriesIn) external onlyRole(ITEM_ADMIN_ROLE) {
         for (uint i = 0; i < itemSeriesIn.length; i++) {
-            ItemSeriesIn memory currentItemSeriesIn = itemSeriesIn[i];
+            ItemSeriesIn calldata currentItemSeriesIn = itemSeriesIn[i];
             // cannot have itemId that's 0
             require(
                 currentItemSeriesIn.itemId > 0,
@@ -155,13 +155,13 @@ contract InGameItems is
     }
 
     function getItemSeries(uint itemId, uint itemSeriesId) external view override returns (ItemSeriesOut memory) {
-        Item memory currentItem = items[itemId];
+        Item storage currentItem = items[itemId];
         require(currentItem.itemId != 0, "InGameItems: Item does not exist");
         require(
             itemSeriesMap[itemId].length > itemSeriesId,
             "InGameItems: itemSeriesId out of range"
         );
-        ItemSeries memory currentItemSeries = itemSeriesMap[itemId][itemSeriesId];
+        ItemSeries storage currentItemSeries = itemSeriesMap[itemId][itemSeriesId];
 
         ItemSeriesOut memory currentItemSeriesOut;
         currentItemSeriesOut.itemId = currentItemSeries.itemId;
