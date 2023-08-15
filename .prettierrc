@@ -1,4 +1,19 @@
 {
   "singleQuote": true,
-  "trailingComma": "none"
+  "trailingComma": "none",
+  "plugins": ["prettier-plugin-solidity"],
+  "overrides": [
+    {
+      "files": "contracts/*/*.sol",
+      "options": {
+        "parser": "solidity-parse",
+        "printWidth": 80,
+        "tabWidth": 4,
+        "useTabs": false,
+        "singleQuote": false,
+        "bracketSpacing": false,
+        "compiler": "0.8.4"
+      }
+    }
+  ]
 }

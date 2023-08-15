@@ -27,7 +27,7 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
     // maximum number of tokens that can be claimed from the contract per day
     uint public globalDailyClaimLimit;
     // the start date for calculating claim limit periods
-    // claim limits reset at globalDailyClaimLimitPeriodStart + globalDailyClaimLimitPeriod * n
+    // claim limits reset at globalDailyClaimLimitPeriodsStart + globalDailyClaimLimitPeriod * n
     // can only be set once in the constructor
     uint public globalDailyClaimLimitPeriodsStart;
     // the length of a claim limit period
@@ -37,8 +37,6 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
 
     // address of the DYS token
     IERC20 public token;
-
-    mapping(address => uint) public claimedRewards;
 
     event Claimed(
         address indexed account,
@@ -53,7 +51,8 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
         address claimAdmin,
         address trustedForwarder,
         address tokenAddress,
-        uint _globalDailyClaimLimitPeriodsStart
+        uint _globalDailyClaimLimitPeriodsStart,
+        address signer_
     ) public initializer {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(PAUSER_ROLE, pauser);
@@ -63,9 +62,10 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
         __AccessControl_init();
         __Pausable_init();
 
+        _setSigner(signer_);
         _setTrustedForwarder(trustedForwarder);
         token = IERC20(tokenAddress);
-        globalDailyClaimLimitPeriodStart = _globalDailyClaimLimitPeriodsStart;
+        globalDailyClaimLimitPeriodsStart = _globalDailyClaimLimitPeriodsStart;
     }
 
     function claim(uint totalRewards, bytes32 hash, bytes calldata signature) external whenNotPaused {
@@ -80,6 +80,10 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
         require(
             block.timestamp - lastClaimedTime[_msgSender()] >= minClaimFrequencyPerAccount,
             "DYSTokenDistributor: Last claim was too recent"
+        );
+        require(
+            totalRewards > _claimedRewards[_msgSender()],
+            "DYSTokenDistributor: No new rewards to claim"
         );
 
         uint amount = totalRewards - _claimedRewards[_msgSender()];
@@ -97,20 +101,16 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
         );
 
         lastClaimedTime[_msgSender()] = block.timestamp;
-        claimedRewards[_msgSender()] += amount;
+        _claimedRewards[_msgSender()] += amount;
         globalDailyClaimLimitPeriodClaimed[lastClaimLimitResetDate] += amount;
 
         token.transfer(_msgSender(), amount);
 
-        emit Claimed(_msgSender(), amount, claimedRewards[_msgSender()]);
+        emit Claimed(_msgSender(), amount, _claimedRewards[_msgSender()]);
     }
 
-    function deposit(uint amount) public onlyRole(TREASURER_ROLE) {
-        token.transferFrom(_msgSender(), address(this), amount);
-    }
-
-    function withdraw(uint amount) public onlyRole(TREASURER_ROLE) {
-        token.transfer(_msgSender(), amount);
+    function withdrawErc20(uint amount, address tokenAddress, address beneficiary) public onlyRole(TREASURER_ROLE) {
+        IERC20(tokenAddress).transfer(beneficiary, amount);
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
@@ -142,8 +142,8 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
     }
 
     function _getLastClaimLimitResetDate() internal view returns(uint) {
-        uint periodsElapsed = (block.timestamp - globalDailyClaimLimitPeriodStart) / globalDailyClaimLimitPeriod;
-        return periodsElapsed * globalDailyClaimLimitPeriod + globalDailyClaimLimitPeriodStart;
+        uint periodsElapsed = (block.timestamp - globalDailyClaimLimitPeriodsStart) / globalDailyClaimLimitPeriod;
+        return periodsElapsed * globalDailyClaimLimitPeriod + globalDailyClaimLimitPeriodsStart;
     }
 
     function _createHash(

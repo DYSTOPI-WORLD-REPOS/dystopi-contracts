@@ -20,9 +20,9 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">97.62% </span>
+        <span class="strong">97.5% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>41/42</span>
+        <span class='fraction'>39/40</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">93.75% </span>
@@ -30,14 +30,14 @@
         <span class='fraction'>45/48</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">93.33% </span>
+        <span class="strong">92.31% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>14/15</span>
+        <span class='fraction'>12/13</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">98.04% </span>
+        <span class="strong">97.92% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>50/51</span>
+        <span class='fraction'>47/48</span>
       </div>
     </div>
   </div>
@@ -264,26 +264,7 @@
 219
 220
 221
-222
-223
-224
-225
-226
-227
-228
-229
-230
-231
-232
-233
-234
-235
-236
-237
-238</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+222</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -477,10 +458,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -488,15 +465,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">16×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -523,17 +491,16 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@opengsn/contracts/src/ERC2771Recipient.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../Utils/SignatureVerification.sol";
 &nbsp;
 contract InGameAssetMarketplace is
     AccessControl,
     Pausable,
-    ERC2771Recipient
+    ERC2771Recipient,
+    SignatureVerification
 {
-    using ECDSA for bytes32;
-&nbsp;
     // can pause minting and transfers
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     // can configure assets
@@ -568,8 +535,6 @@ contract InGameAssetMarketplace is
     mapping(uint =&gt; Asset) public assetMap;
     // nonces for signature verification
     mapping(bytes32 =&gt; bool) internal _nonces;
-    // signer for signature verification
-    address internal _signer;
 &nbsp;
     constructor(
         address admin,
@@ -583,7 +548,7 @@ contract InGameAssetMarketplace is
         _grantRole(PAUSER_ROLE, pauser);
         _grantRole(STORE_ADMIN_ROLE, storeAdmin);
         _grantRole(BENEFICIARY_ROLE, beneficiary);
-        _signer = signer_;
+        _setSigner(signer_);
         _setTrustedForwarder(trustedForwarder_);
     }
 &nbsp;
@@ -608,11 +573,11 @@ contract InGameAssetMarketplace is
             "InGameAssetMarketplace: Nonce was already used"
         );
         require(
-            matchAddressSigner(hash, signature),
+            _verify(hash, signature),
             "InGameAssetMarketplace: Message was not signed by signer"
         );
         require(
-            hash == hashTransaction(_msgSender(), assetIds, qtys, receiptIds, nonce),
+            hash == _createMessageHash(_createHash(_msgSender(), assetIds, qtys, receiptIds, nonce)),
             "InGameAssetMarketplace: Hash mismatch"
         );
 &nbsp;
@@ -623,7 +588,7 @@ contract InGameAssetMarketplace is
         for (uint i = 0; i &lt; assetIds.length; i++) {
             require(qtys[i] &gt; 0, "InGameAssetMarketplace: Cannot purchase 0 assets");
 &nbsp;
-            Asset memory asset = assetMap[assetIds[i]];
+            Asset storage asset = assetMap[assetIds[i]];
 &nbsp;
             require(asset.active, "InGameAssetMarketplace: Asset is not active");
 &nbsp;
@@ -713,27 +678,14 @@ contract InGameAssetMarketplace is
         _signer = signer_;
     }
 &nbsp;
-    function getSigner() external view returns (address) {
-        return _signer;
-    }
-&nbsp;
-    function hashTransaction(
+    function _createHash(
         address sender,
         uint[] calldata assetIds,
         uint[] calldata qtys,
         uint[] calldata receiptIds,
         bytes32 nonce
     ) internal pure returns(bytes32) {
-        bytes32 hash = keccak256(abi.encodePacked(
-                "\x19Ethereum Signed Message:\n32",
-                keccak256(abi.encodePacked(sender, assetIds, qtys, receiptIds, nonce)))
-        );
-&nbsp;
-        return hash;
-    }
-&nbsp;
-    function matchAddressSigner(bytes32 hash, bytes memory signature) internal view returns(bool) {
-        return _signer == hash.recover(signature);
+        return keccak256(abi.encodePacked(sender, assetIds, qtys, receiptIds, nonce));
     }
 &nbsp;
     function _msgSender()
@@ -760,7 +712,7 @@ contract InGameAssetMarketplace is
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Jul 12 2023 18:37:53 GMT+0200 (Central European Summer Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Aug 15 2023 12:09:09 GMT+0200 (Central European Summer Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

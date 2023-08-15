@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for DYS/DYSTokenDistributor.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">DYS/</a> DYSTokenDistributor.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">96.3% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>26/27</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">93.75% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>30/32</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">92.86% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>13/14</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">97.22% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>35/36</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-yes">63×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">22×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">22×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">22×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">419×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.4;
+&nbsp;
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@opengsn/contracts/src/ERC2771Recipient.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../Utils/SignatureVerification.sol";
+&nbsp;
+contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, ERC2771Recipient, SignatureVerification {
+    // can pause the contract
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    // can deposit and withdraw tokens
+    bytes32 public constant TREASURER_ROLE = keccak256("TREASURER_ROLE");
+    // can configure the claim limits and parameters
+    bytes32 public constant CLAIM_ADMIN_ROLE = keccak256("CLAIM_ADMIN_ROLE");
+&nbsp;
+    // maximum number of tokens that can be claimed by an account per transaction
+    uint public maxClaimPerTransaction;
+    // minimum time between claims per account
+    uint public minClaimFrequencyPerAccount;
+    // last time the user has claimed
+    mapping(address =&gt; uint) public lastClaimedTime;
+    // all rewards ever claimed by address
+    mapping(address =&gt; uint) internal _claimedRewards;
+&nbsp;
+    // maximum number of tokens that can be claimed from the contract per day
+    uint public globalDailyClaimLimit;
+    // the start date for calculating claim limit periods
+    // claim limits reset at globalDailyClaimLimitPeriodsStart + globalDailyClaimLimitPeriod * n
+    // can only be set once in the constructor
+    uint public globalDailyClaimLimitPeriodsStart;
+    // the length of a claim limit period
+    uint public constant globalDailyClaimLimitPeriod = 1 days;
+    // the amount of tokens claimed in a claim limit period
+    mapping (uint =&gt; uint) public globalDailyClaimLimitPeriodClaimed;
+&nbsp;
+    // address of the DYS token
+    IERC20 public token;
+&nbsp;
+    event Claimed(
+        address indexed account,
+        uint claimedAmount,
+        uint totalClaimedAmount
+    );
+&nbsp;
+    function initialize(
+        address admin,
+        address pauser,
+        address treasurer,
+        address claimAdmin,
+        address trustedForwarder,
+        address tokenAddress,
+        uint _globalDailyClaimLimitPeriodsStart,
+        address signer_
+    ) public <span class="missing-if-branch" title="else path not taken" >E</span>initializer {
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(PAUSER_ROLE, pauser);
+        _grantRole(TREASURER_ROLE, treasurer);
+        _grantRole(CLAIM_ADMIN_ROLE, claimAdmin);
+&nbsp;
+        __AccessControl_init();
+        __Pausable_init();
+&nbsp;
+        _setSigner(signer_);
+        _setTrustedForwarder(trustedForwarder);
+        token = IERC20(tokenAddress);
+        globalDailyClaimLimitPeriodsStart = _globalDailyClaimLimitPeriodsStart;
+    }
+&nbsp;
+    function claim(uint totalRewards, bytes32 hash, bytes calldata signature) external whenNotPaused {
+        require(
+            _verify(hash, signature),
+            "DYSTokenDistributor: Message was not signed by signer"
+        );
+        require(
+            hash == _createMessageHash(_createHash(_msgSender(), totalRewards)),
+            "DYSTokenDistributor: Hash mismatch"
+        );
+        require(
+            block.timestamp - lastClaimedTime[_msgSender()] &gt;= minClaimFrequencyPerAccount,
+            "DYSTokenDistributor: Last claim was too recent"
+        );
+        require(
+            totalRewards &gt; _claimedRewards[_msgSender()],
+            "DYSTokenDistributor: No new rewards to claim"
+        );
+&nbsp;
+        uint amount = totalRewards - _claimedRewards[_msgSender()];
+&nbsp;
+        require(
+            amount &lt;= maxClaimPerTransaction,
+            "DYSTokenDistributor: Claim amount exceeds max claim per transaction"
+        );
+&nbsp;
+        uint lastClaimLimitResetDate = _getLastClaimLimitResetDate();
+&nbsp;
+        require(
+            globalDailyClaimLimitPeriodClaimed[lastClaimLimitResetDate] + amount &lt;= globalDailyClaimLimit,
+            "DYSTokenDistributor: Claim amount exceeds global daily claim limit"
+        );
+&nbsp;
+        lastClaimedTime[_msgSender()] = block.timestamp;
+        _claimedRewards[_msgSender()] += amount;
+        globalDailyClaimLimitPeriodClaimed[lastClaimLimitResetDate] += amount;
+&nbsp;
+        token.transfer(_msgSender(), amount);
+&nbsp;
+        emit Claimed(_msgSender(), amount, _claimedRewards[_msgSender()]);
+    }
+&nbsp;
+    function withdrawErc20(uint amount, address tokenAddress, address beneficiary) public onlyRole(TREASURER_ROLE) {
+        IERC20(tokenAddress).transfer(beneficiary, amount);
+    }
+&nbsp;
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+&nbsp;
+    function unpause() public <span class="missing-if-branch" title="else path not taken" >E</span>onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+&nbsp;
+    function setMaxClaimPerTransaction(uint amount) public onlyRole(CLAIM_ADMIN_ROLE) {
+        maxClaimPerTransaction = amount;
+    }
+&nbsp;
+    function setMinClaimFrequencyPerAccount(uint amount) public onlyRole(CLAIM_ADMIN_ROLE) {
+        minClaimFrequencyPerAccount = amount;
+    }
+&nbsp;
+    function setGlobalDailyClaimLimit(uint amount) public onlyRole(CLAIM_ADMIN_ROLE) {
+        globalDailyClaimLimit = amount;
+    }
+&nbsp;
+    function setTrustedForwarder(address trustedForwarder) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setTrustedForwarder(trustedForwarder);
+    }
+&nbsp;
+    function setSigner(address signer) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _signer = signer;
+    }
+&nbsp;
+    function _getLastClaimLimitResetDate() internal view returns(uint) {
+        uint periodsElapsed = (block.timestamp - globalDailyClaimLimitPeriodsStart) / globalDailyClaimLimitPeriod;
+        return periodsElapsed * globalDailyClaimLimitPeriod + globalDailyClaimLimitPeriodsStart;
+    }
+&nbsp;
+    function _createHash(
+        address sender,
+        uint totalRewards
+    ) internal pure returns(bytes32) {
+        return keccak256(abi.encodePacked(sender, totalRewards));
+    }
+&nbsp;
+    function _msgSender() internal view override(ContextUpgradeable, ERC2771Recipient) returns (address sender) {
+        return ERC2771Recipient._msgSender();
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _msgData() internal view override(ContextUpgradeable, ERC2771Recipient) returns (bytes calldata) {</span>
+<span class="cstat-no" title="statement not covered" >        return ERC2771Recipient._msgData();</span>
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Aug 15 2023 12:09:09 GMT+0200 (Central European Summer Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

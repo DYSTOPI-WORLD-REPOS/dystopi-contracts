@@ -35,9 +35,9 @@
         <span class='fraction'>13/15</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">96.88% </span>
+        <span class="strong">96.67% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>62/64</span>
+        <span class='fraction'>58/60</span>
       </div>
     </div>
   </div>
@@ -280,7 +280,11 @@
 235
 236
 237
-238</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+238
+239
+240
+241
+242</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -375,9 +379,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">539×</span>
-<span class="cline-any cline-yes">5193×</span>
-<span class="cline-any cline-yes">5193×</span>
-<span class="cline-any cline-yes">5193×</span>
+<span class="cline-any cline-yes">5179×</span>
+<span class="cline-any cline-yes">5179×</span>
+<span class="cline-any cline-yes">5179×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -414,12 +418,16 @@
 <span class="cline-any cline-yes">697×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">697×</span>
-<span class="cline-any cline-yes">697×</span>
-<span class="cline-any cline-yes">697×</span>
-<span class="cline-any cline-yes">697×</span>
-<span class="cline-any cline-yes">697×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">697×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">697×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -478,7 +486,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5206×</span>
+<span class="cline-any cline-yes">5192×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -631,7 +639,7 @@ contract InGameItems is
 &nbsp;
     function setupItemSeries(ItemSeriesIn[] calldata itemSeriesIn) external onlyRole(ITEM_ADMIN_ROLE) {
         for (uint i = 0; i &lt; itemSeriesIn.length; i++) {
-            ItemSeriesIn memory currentItemSeriesIn = itemSeriesIn[i];
+            ItemSeriesIn calldata currentItemSeriesIn = itemSeriesIn[i];
             // cannot have itemId that's 0
             <span class="missing-if-branch" title="else path not taken" >E</span>require(
                 currentItemSeriesIn.itemId &gt; 0,
@@ -650,19 +658,23 @@ contract InGameItems is
 &nbsp;
             lastOccupiedTokenId += currentItemSeriesIn.editionSize;
 &nbsp;
-            ItemSeries memory currentItemSeries;
-            currentItemSeries.startingTokenId = lastOccupiedTokenId - currentItemSeriesIn.editionSize + 1;
-            currentItemSeries.editionSize = currentItemSeriesIn.editionSize;
-            currentItemSeries.itemId = currentItemSeriesIn.itemId;
-            currentItemSeries.itemSeriesId = currentItemSeriesIn.itemSeriesId;
+            uint startingTokenId = lastOccupiedTokenId - currentItemSeriesIn.editionSize + 1;
 &nbsp;
-            itemSeriesMap[currentItemSeries.itemId].push(currentItemSeries);
+            itemSeriesMap[currentItemSeriesIn.itemId].push(
+                ItemSeries(
+                    currentItemSeriesIn.itemId,
+                    currentItemSeriesIn.itemSeriesId,
+                    startingTokenId,
+                    currentItemSeriesIn.editionSize,
+                    0
+                )
+            );
 &nbsp;
             emit ItemSeriesAdded(
-                currentItemSeries.itemId,
+                currentItemSeriesIn.itemId,
                 currentItemSeriesIn.itemSeriesId,
-                currentItemSeries.startingTokenId,
-                currentItemSeries.editionSize
+                startingTokenId,
+                currentItemSeriesIn.editionSize
             );
         }
     }
@@ -674,13 +686,13 @@ contract InGameItems is
     }
 &nbsp;
     function getItemSeries(uint itemId, uint itemSeriesId) external view override returns (ItemSeriesOut memory) {
-        Item memory currentItem = items[itemId];
+        Item storage currentItem = items[itemId];
         require(currentItem.itemId != 0, "InGameItems: Item does not exist");
         require(
             itemSeriesMap[itemId].length &gt; itemSeriesId,
             "InGameItems: itemSeriesId out of range"
         );
-        ItemSeries memory currentItemSeries = itemSeriesMap[itemId][itemSeriesId];
+        ItemSeries storage currentItemSeries = itemSeriesMap[itemId][itemSeriesId];
 &nbsp;
         ItemSeriesOut memory currentItemSeriesOut;
         currentItemSeriesOut.itemId = currentItemSeries.itemId;
@@ -760,7 +772,7 @@ contract InGameItems is
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Jul 12 2023 18:37:53 GMT+0200 (Central European Summer Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Aug 15 2023 12:09:09 GMT+0200 (Central European Summer Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

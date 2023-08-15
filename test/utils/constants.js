@@ -14,6 +14,8 @@ module.exports = {
   GEM_ADMIN_ROLE: keccak256(toUtf8Bytes('GEM_ADMIN_ROLE')).toLowerCase(),
   BENEFICIARY_ROLE: keccak256(toUtf8Bytes('BENEFICIARY_ROLE')).toLowerCase(),
   MINTER_ROLE: keccak256(toUtf8Bytes('MINTER_ROLE')).toLowerCase(),
+  TREASURER_ROLE: keccak256(toUtf8Bytes('TREASURER_ROLE')).toLowerCase(),
+  CLAIM_ADMIN_ROLE: keccak256(toUtf8Bytes('CLAIM_ADMIN_ROLE')).toLowerCase(),
   DEFAULT_ADMIN_ROLE:
     '0x0000000000000000000000000000000000000000000000000000000000000000'
 };
