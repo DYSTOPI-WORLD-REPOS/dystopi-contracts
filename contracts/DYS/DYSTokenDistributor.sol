@@ -70,6 +70,10 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
 
     function claim(uint totalRewards, bytes32 hash, bytes calldata signature) external whenNotPaused {
         require(
+            block.timestamp >= globalDailyClaimLimitPeriodsStart,
+            "DYSTokenDistributor: Claiming has not started yet"
+        );
+        require(
             _verify(hash, signature),
             "DYSTokenDistributor: Message was not signed by signer"
         );
