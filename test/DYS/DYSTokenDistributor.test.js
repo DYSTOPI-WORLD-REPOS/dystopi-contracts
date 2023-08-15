@@ -164,6 +164,21 @@ describe('DYSTokenDistributor', () => {
         totalRewards += MAX_CLAIM_PER_TRANSACTION;
         await time.increase(MIN_CLAIM_FREQUENCY_PER_ACCOUNT);
       }
+
+      const lastResetDate = (
+        await dysTokenDistributor.getLastClaimLimitResetDate()
+      ).toNumber();
+      const period = (
+        await dysTokenDistributor.globalDailyClaimLimitPeriod()
+      ).toNumber();
+
+      await time.increaseTo(
+        ethers.BigNumber.from(lastResetDate + period).toHexString()
+      );
+
+      await dysTokenDistributorUser.claim(
+        ...createClaimParams(user.address, totalRewards)
+      );
     });
     it('should revert if signed with invalid private key', async () => {
       await expect(

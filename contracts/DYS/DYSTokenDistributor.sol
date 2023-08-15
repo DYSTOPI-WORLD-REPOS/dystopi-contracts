@@ -93,7 +93,7 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
             "DYSTokenDistributor: Claim amount exceeds max claim per transaction"
         );
 
-        uint lastClaimLimitResetDate = _getLastClaimLimitResetDate();
+        uint lastClaimLimitResetDate = getLastClaimLimitResetDate();
 
         require(
             globalDailyClaimLimitPeriodClaimed[lastClaimLimitResetDate] + amount <= globalDailyClaimLimit,
@@ -141,7 +141,7 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
         _signer = signer;
     }
 
-    function _getLastClaimLimitResetDate() internal view returns(uint) {
+    function getLastClaimLimitResetDate() public view returns(uint) {
         uint periodsElapsed = (block.timestamp - globalDailyClaimLimitPeriodsStart) / globalDailyClaimLimitPeriod;
         return periodsElapsed * globalDailyClaimLimitPeriod + globalDailyClaimLimitPeriodsStart;
     }
