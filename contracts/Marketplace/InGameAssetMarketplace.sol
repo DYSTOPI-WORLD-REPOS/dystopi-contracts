@@ -4,17 +4,16 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@opengsn/contracts/src/ERC2771Recipient.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../Utils/SignatureVerification.sol";
 
 contract InGameAssetMarketplace is
     AccessControl,
     Pausable,
-    ERC2771Recipient
+    ERC2771Recipient,
+    SignatureVerification
 {
-    using ECDSA for bytes32;
-
     // can pause minting and transfers
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     // can configure assets
@@ -49,8 +48,6 @@ contract InGameAssetMarketplace is
     mapping(uint => Asset) public assetMap;
     // nonces for signature verification
     mapping(bytes32 => bool) internal _nonces;
-    // signer for signature verification
-    address internal _signer;
 
     constructor(
         address admin,
@@ -64,7 +61,7 @@ contract InGameAssetMarketplace is
         _grantRole(PAUSER_ROLE, pauser);
         _grantRole(STORE_ADMIN_ROLE, storeAdmin);
         _grantRole(BENEFICIARY_ROLE, beneficiary);
-        _signer = signer_;
+        _setSigner(signer_);
         _setTrustedForwarder(trustedForwarder_);
     }
 
@@ -89,11 +86,11 @@ contract InGameAssetMarketplace is
             "InGameAssetMarketplace: Nonce was already used"
         );
         require(
-            matchAddressSigner(hash, signature),
+            _verify(hash, signature),
             "InGameAssetMarketplace: Message was not signed by signer"
         );
         require(
-            hash == hashTransaction(_msgSender(), assetIds, qtys, receiptIds, nonce),
+            hash == _createMessageHash(_createHash(_msgSender(), assetIds, qtys, receiptIds, nonce)),
             "InGameAssetMarketplace: Hash mismatch"
         );
 
@@ -194,27 +191,14 @@ contract InGameAssetMarketplace is
         _signer = signer_;
     }
 
-    function getSigner() external view returns (address) {
-        return _signer;
-    }
-
-    function hashTransaction(
+    function _createHash(
         address sender,
         uint[] calldata assetIds,
         uint[] calldata qtys,
         uint[] calldata receiptIds,
         bytes32 nonce
     ) internal pure returns(bytes32) {
-        bytes32 hash = keccak256(abi.encodePacked(
-                "\x19Ethereum Signed Message:\n32",
-                keccak256(abi.encodePacked(sender, assetIds, qtys, receiptIds, nonce)))
-        );
-
-        return hash;
-    }
-
-    function matchAddressSigner(bytes32 hash, bytes memory signature) internal view returns(bool) {
-        return _signer == hash.recover(signature);
+        return keccak256(abi.encodePacked(sender, assetIds, qtys, receiptIds, nonce));
     }
 
     function _msgSender()

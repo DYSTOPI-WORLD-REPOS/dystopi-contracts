@@ -4,17 +4,17 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@opengsn/contracts/src/ERC2771Recipient.sol";
 import "../NFT/interfaces/IInGameItems.sol";
+import "../Utils/SignatureVerification.sol";
 
 contract InGameItemMarketplace is
     AccessControl,
     Pausable,
-    ERC2771Recipient
+    ERC2771Recipient,
+    SignatureVerification
 {
-    using ECDSA for bytes32;
 
     // can pause minting and transfers
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -45,8 +45,6 @@ contract InGameItemMarketplace is
     IInGameItems internal _inGameItems;
     // nonces for signature verification
     mapping(bytes32 => bool) internal _nonces;
-    // signer for signature verification
-    address internal _signer;
 
     event ItemSeriesPricingUpdated(
         uint itemId,
@@ -72,7 +70,7 @@ contract InGameItemMarketplace is
         _grantRole(BENEFICIARY_ROLE, beneficiary);
 
         _inGameItems = IInGameItems(inGameItemsAddress);
-        _signer = signer_;
+        _setSigner(signer_);
         _setTrustedForwarder(trustedForwarder_);
     }
 
@@ -85,7 +83,7 @@ contract InGameItemMarketplace is
         bytes memory signature
     ) external payable whenNotPaused {
         require(
-            matchAddressSigner(hash, signature),
+            _verify(hash, signature),
             "InGameItemMarketplace: Message was not signed by signer"
         );
         require(
@@ -93,7 +91,7 @@ contract InGameItemMarketplace is
             "InGameItemMarketplace: Nonce was already used"
         );
         require(
-            hashTransaction(_msgSender(), itemIds, itemSeriesIds, qtys, nonce) == hash,
+            hash == _createMessageHash(_createHash(_msgSender(), itemIds, itemSeriesIds, qtys, nonce)),
             "InGameItemMarketplace: Hash mismatch"
         );
         require(
@@ -245,10 +243,6 @@ contract InGameItemMarketplace is
         _signer = signer_;
     }
 
-    function getSigner() external view returns (address) {
-        return _signer;
-    }
-
     function getInGameItems() external view returns (address) {
         return address(_inGameItems);
     }
@@ -270,23 +264,14 @@ contract InGameItemMarketplace is
         return itemSeriesPricingMap[itemId][itemSeriesId];
     }
 
-    function hashTransaction(
+    function _createHash(
         address sender,
         uint[] calldata itemIds,
         uint[] calldata itemSeriesIds,
         uint[] calldata qtys,
         bytes32 nonce
     ) internal pure returns(bytes32) {
-        bytes32 hash = keccak256(abi.encodePacked(
-                "\x19Ethereum Signed Message:\n32",
-                keccak256(abi.encodePacked(sender, itemIds, itemSeriesIds, qtys, nonce)))
-        );
-
-        return hash;
-    }
-
-    function matchAddressSigner(bytes32 hash, bytes memory signature) internal view returns(bool) {
-        return _signer == hash.recover(signature);
+        return keccak256(abi.encodePacked(sender, itemIds, itemSeriesIds, qtys, nonce));
     }
 
     function _msgSender()
