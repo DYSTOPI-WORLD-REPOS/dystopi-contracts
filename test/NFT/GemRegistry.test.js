@@ -41,6 +41,18 @@ const itemIdPerTypeCount = 2;
 const itemSeriesPerItemCount = 1;
 const mintedEditions = 10;
 
+/**
+ * Creates item data for testing
+ * Item structure is:
+ * - Items, represented by itemId - a blueprint for an in-game item, such as a type of armour, etc.
+ * - Every item has an itemType associated with it, it represents the kind of item it is - helmet, pistol, etc.
+ * - Every item has a slotNumber associated with it, which is the number of gems that can be inserted into it (gems are items with specific itemTypes)
+ * - Every item can have multiple series, represented by itemSeriesId - a series of x number of NFTs released of the item
+ * - Every itemSeries has tokens associated with it, that is, NFTs that are minted from that itemSeries and item.
+ * This function creates itemPerTypeCount number of items for each itemType, and itemSeriesPerItemCount number of itemSeries for each item, all of which series then mintedEdition number of tokens will be minted for testing
+ * Slot numbers of items belonging to a type are incremented from slotsFromPerType
+ * @returns {{itemSeries: *, items: unknown, itemTypeItemsMap: {}}}
+ */
 const generateItemData = () => {
   const itemTypeItemsMap = {};
   let itemId = 1;
@@ -48,44 +60,31 @@ const generateItemData = () => {
     const itemType = allTypes[typeIndex];
     for (let idIndex = 0; idIndex < itemIdPerTypeCount; idIndex++) {
       if (itemTypeItemsMap[itemType] === undefined) {
-        itemTypeItemsMap[itemType] = [
-          generateItem(
-            itemId,
-            itemType,
-            isNaN(slotsFromPerType[itemType]) ? 0 : slotsFromPerType[itemType]
-          )
-        ];
-      } else {
-        itemTypeItemsMap[itemType].push(
-          generateItem(
-            itemId,
-            itemType,
-            isNaN(slotsFromPerType[itemType])
-              ? 0
-              : itemTypeItemsMap[itemType][idIndex - 1].slots + 1
-          )
-        );
+        itemTypeItemsMap[itemType] = [];
       }
+      itemTypeItemsMap[itemType].push(
+        generateItem(
+          itemId,
+          itemType,
+          isNaN(slotsFromPerType[itemType])
+            ? 0
+            : slotsFromPerType[itemType] + idIndex
+        )
+      );
       for (
         let seriesIndex = 0;
         seriesIndex < itemSeriesPerItemCount;
         seriesIndex++
       ) {
         if (itemTypeItemsMap[itemType][idIndex].series === undefined) {
-          itemTypeItemsMap[itemType][idIndex].series = [
-            generateRandomItemSeries(
-              itemTypeItemsMap[itemType][idIndex],
-              seriesIndex
-            )
-          ];
-        } else {
-          itemTypeItemsMap[itemType][idIndex].series.push(
-            generateRandomItemSeries(
-              itemTypeItemsMap[itemType][idIndex],
-              seriesIndex
-            )
-          );
+          itemTypeItemsMap[itemType][idIndex].series = [];
         }
+        itemTypeItemsMap[itemType][idIndex].series.push(
+          generateRandomItemSeries(
+            itemTypeItemsMap[itemType][idIndex],
+            seriesIndex
+          )
+        );
       }
       itemId++;
     }
