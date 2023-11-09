@@ -16,7 +16,15 @@ describe('DYSVesting', function () {
 
   beforeEach(async function () {
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
-    dysToken = await Token.deploy(owner.address, 1_000_000_000);
+    dysToken = await Token.deploy(
+      owner.address,
+      owner.address,
+      owner.address,
+      owner.address,
+      owner.address,
+      owner.address,
+      1_000_000_000
+    );
     await dysToken.deployed();
   });
 

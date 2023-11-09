@@ -47,7 +47,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
     }
 
     // address of the DYS ERC20 token
-    IERC20 immutable private _token;
+    IERC20 immutable private TOKEN;
 
     bytes32[] private _vestingSchedulesIds;
     mapping(bytes32 => VestingSchedule) private _vestingSchedules;
@@ -68,11 +68,11 @@ contract DYSVesting is Ownable, ReentrancyGuard {
 
     /**
      * @dev Creates a vesting contract.
-     * @param token_ address of the DYS ERC20 token contract
+     * @param token address of the DYS ERC20 token contract
      */
-    constructor(address token_) {
-        require(token_ != address(0x0));
-        _token = IERC20(token_);
+    constructor(address token) {
+        require(token != address(0x0));
+        TOKEN = IERC20(token);
     }
 
     /**
@@ -128,7 +128,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
     external
     view
     returns(address) {
-        return address(_token);
+        return address(TOKEN);
     }
 
     /**
@@ -228,7 +228,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
     nonReentrant
     onlyOwner {
         require(getWithdrawableAmount() >= amount, "DYSVesting: not enough withdrawable funds");
-        _token.safeTransfer(owner(), amount);
+        TOKEN.safeTransfer(owner(), amount);
     }
 
     /**
@@ -254,7 +254,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
         require(vestedAmount >= amount, "DYSVesting: cannot release tokens, not enough vested tokens");
         vestingSchedule.released += amount;
         _vestingSchedulesTotalAmount -= amount;
-        _token.safeTransfer(vestingSchedule.beneficiary, amount);
+        TOKEN.safeTransfer(vestingSchedule.beneficiary, amount);
         emit Released(vestingScheduleId, amount);
     }
 
@@ -301,7 +301,7 @@ contract DYSVesting is Ownable, ReentrancyGuard {
     public
     view
     returns(uint256) {
-        return _token.balanceOf(address(this)) - _vestingSchedulesTotalAmount;
+        return TOKEN.balanceOf(address(this)) - _vestingSchedulesTotalAmount;
     }
 
     /**

@@ -8,6 +8,8 @@ module.exports = {
     '0xccdd0af596e04e49b52c356bfbb429c91cf33becd135c59265fe41118709df91',
   mockPrivateKey2:
     '0x2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b',
+  MAX_SOLIDITY_INTEGER:
+    '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
   PAUSER_ROLE: keccak256(toUtf8Bytes('PAUSER_ROLE')).toLowerCase(),
   STORE_ADMIN_ROLE: keccak256(toUtf8Bytes('STORE_ADMIN_ROLE')).toLowerCase(),
   ITEM_ADMIN_ROLE: keccak256(toUtf8Bytes('ITEM_ADMIN_ROLE')).toLowerCase(),
@@ -16,6 +18,7 @@ module.exports = {
   MINTER_ROLE: keccak256(toUtf8Bytes('MINTER_ROLE')).toLowerCase(),
   TREASURER_ROLE: keccak256(toUtf8Bytes('TREASURER_ROLE')).toLowerCase(),
   CLAIM_ADMIN_ROLE: keccak256(toUtf8Bytes('CLAIM_ADMIN_ROLE')).toLowerCase(),
+  FEE_ADMIN_ROLE: keccak256(toUtf8Bytes('FEE_ADMIN_ROLE')).toLowerCase(),
   DEFAULT_ADMIN_ROLE:
     '0x0000000000000000000000000000000000000000000000000000000000000000'
 };

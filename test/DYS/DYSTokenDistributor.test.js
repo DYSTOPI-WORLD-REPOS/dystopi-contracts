@@ -59,7 +59,15 @@ describe('DYSTokenDistributor', () => {
     [deployer, admin, treasurer, claimAdmin, pauser, user] =
       await ethers.getSigners();
 
-    dysToken = await DysTokenFactory.deploy(deployer.address, 1_000_000);
+    dysToken = await DysTokenFactory.deploy(
+      deployer.address,
+      deployer.address,
+      deployer.address,
+      deployer.address,
+      deployer.address,
+      deployer.address,
+      1_000_000
+    );
     await dysToken.deployed();
 
     dysTokenDistributor = await upgrades.deployProxy(
@@ -169,7 +177,7 @@ describe('DYSTokenDistributor', () => {
         await dysTokenDistributor.getLastClaimLimitResetDate()
       ).toNumber();
       const period = (
-        await dysTokenDistributor.globalDailyClaimLimitPeriod()
+        await dysTokenDistributor.GLOBAL_DAILY_CLAIM_LIMIT_PERIOD()
       ).toNumber();
 
       await time.increaseTo(

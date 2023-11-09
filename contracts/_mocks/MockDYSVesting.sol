@@ -12,7 +12,7 @@ import "../DYS/DYSVesting.sol";
  */
 contract MockDYSVesting is DYSVesting {
 
-    uint256 mockTime = 0;
+    uint256 public mockTime = 0;
 
     constructor(address token_) DYSVesting(token_) {}
 

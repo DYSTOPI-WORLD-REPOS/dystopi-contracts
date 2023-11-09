@@ -56,7 +56,7 @@ contract InGameItems is
         address itemAdmin,
         address trustedForwarder_,
         string memory baseURI_
-    ) initializer public {
+    ) public initializer {
         __AccessControl_init();
         __ERC721_init(_name, _symbol);
         __ERC721Burnable_init();

@@ -31,7 +31,7 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
     // can only be set once in the constructor
     uint public globalDailyClaimLimitPeriodsStart;
     // the length of a claim limit period
-    uint public constant globalDailyClaimLimitPeriod = 1 days;
+    uint public constant GLOBAL_DAILY_CLAIM_LIMIT_PERIOD = 1 days;
     // the amount of tokens claimed in a claim limit period
     mapping (uint => uint) public globalDailyClaimLimitPeriodClaimed;
 
@@ -146,8 +146,8 @@ contract DYSTokenDistributor is AccessControlUpgradeable, PausableUpgradeable, E
     }
 
     function getLastClaimLimitResetDate() public view returns(uint) {
-        uint periodsElapsed = (block.timestamp - globalDailyClaimLimitPeriodsStart) / globalDailyClaimLimitPeriod;
-        return periodsElapsed * globalDailyClaimLimitPeriod + globalDailyClaimLimitPeriodsStart;
+        uint periodsElapsed = (block.timestamp - globalDailyClaimLimitPeriodsStart) / GLOBAL_DAILY_CLAIM_LIMIT_PERIOD;
+        return periodsElapsed * GLOBAL_DAILY_CLAIM_LIMIT_PERIOD + globalDailyClaimLimitPeriodsStart;
     }
 
     function _createHash(

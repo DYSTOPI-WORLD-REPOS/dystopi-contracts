@@ -1,0 +1,10 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "no-global-import": "off",
+    "explicit-types": "off",
+    "custom-errors": "off",
+    "reason-string": "off",
+    "func-visibility": ["warn", {"ignoreConstructors": true}]
+  }
+}
