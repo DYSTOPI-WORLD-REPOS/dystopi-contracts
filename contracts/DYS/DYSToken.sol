@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@opengsn/contracts/src/ERC2771Recipient.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -21,11 +22,13 @@ contract DYSToken is ERC20, ERC2771Recipient, AccessControl, Pausable, Reentranc
     uint public sellFeePercentage = 0; // decimal 10000
 
     // uniswap v2 router
-    IUniswapV2Router02 public v2Router;
+    IUniswapV2Router02 public immutable v2Router;
     // dex routers to and from which sell and buy fees apply
     mapping(address => bool) public isDex;
     // addresses exempt from sell and buy fees
     mapping (address => bool) public whitelist;
+    // whether to convert buy and sell fees to eth
+    bool public swapFeesToEth = true;
 
     receive() external payable {}
 
@@ -38,6 +41,8 @@ contract DYSToken is ERC20, ERC2771Recipient, AccessControl, Pausable, Reentranc
         address beneficiary,
         uint totalSupply_
     ) ERC20("DYSEUM Token", "DYS") {
+        require(totalSupply_ > 0, "DYSToken: Total supply cannot be zero");
+
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(PAUSER_ROLE, pauser);
         _grantRole(FEE_ADMIN_ROLE, feeAdmin);
@@ -63,7 +68,7 @@ contract DYSToken is ERC20, ERC2771Recipient, AccessControl, Pausable, Reentranc
         address to,
         uint256 amount
     ) internal whenNotPaused override {
-        // if the sender is not whitelisted, try to apply fees
+        // if both the sender and recipient are not whitelisted, try to apply fees
         if (!whitelist[from] && !whitelist[to]) {
             uint fee = 0;
 
@@ -75,7 +80,9 @@ contract DYSToken is ERC20, ERC2771Recipient, AccessControl, Pausable, Reentranc
 
             if (fee > 0) {
                 super._transfer(from, address(this), fee);
-                _swapTokenForETH(fee);
+                if (swapFeesToEth) {
+                    _swapTokenForETH(fee);
+                }
             }
 
             super._transfer(from, to, amount - fee);
@@ -116,6 +123,10 @@ contract DYSToken is ERC20, ERC2771Recipient, AccessControl, Pausable, Reentranc
         sellFeePercentage = fee;
     }
 
+    function setSwapFeesToEth(bool swapFeesToEth_) external onlyRole(FEE_ADMIN_ROLE) {
+        swapFeesToEth = swapFeesToEth_;
+    }
+
     function setWhitelistedAddress(address account, bool isWhitelisted) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(account != address(0), "DYSToken: Cannot set zero address as whitelisted");
         whitelist[account] = isWhitelisted;
@@ -130,20 +141,17 @@ contract DYSToken is ERC20, ERC2771Recipient, AccessControl, Pausable, Reentranc
         _setTrustedForwarder(trustedForwarder);
     }
 
-    function setUniswapRouter(address v2RouterAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        v2Router = IUniswapV2Router02(v2RouterAddress);
-        _approve(address(this), v2RouterAddress, 2**256-1);
-    }
-
     function setApprovalFor(address spender, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _approve(address(this), spender, amount);
     }
 
     function withdrawTokens(address tokenAddress, address beneficiary) external onlyRole(TREASURER_ROLE) {
-        IERC20(tokenAddress).transfer(beneficiary, IERC20(tokenAddress).balanceOf(address(this)));
+        require(beneficiary != address(0), "DYSToken: Cannot withdraw tokens to zero address");
+        SafeERC20.safeTransfer(IERC20(tokenAddress), beneficiary, IERC20(tokenAddress).balanceOf(address(this)));
     }
 
     function withdrawETH(address beneficiary) external onlyRole(TREASURER_ROLE) {
+        require(beneficiary != address(0), "DYSToken: Cannot withdraw ETH to zero address");
         payable(beneficiary).transfer(address(this).balance);
     }
 

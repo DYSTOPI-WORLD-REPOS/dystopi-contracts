@@ -102,6 +102,9 @@ describe('DYSToken', () => {
       expect(await dysToken.totalSupply()).to.equal(
         ethers.utils.parseEther('1000000')
       );
+      expect(
+        await dysToken.allowance(dysToken.address, uniswapV2Router.address)
+      ).to.equal(MAX_SOLIDITY_INTEGER);
     });
   });
 
@@ -154,6 +157,34 @@ describe('DYSToken', () => {
           dysToken.address,
           block.timestamp
         );
+    });
+    it('should transfer tokens and apply buy and sell fee but not swap if swapFeesToEth === false', async () => {
+      await dysTokenFeeAdmin.setSwapFeesToEth(false);
+      const sellPromise = dysTokenUser.transfer(dex.address, 100);
+      const buyPromise = dysTokenDex.transfer(user.address, 100);
+
+      await expect(sellPromise)
+        .to.emit(dysToken, 'Transfer')
+        .withArgs(user.address, dex.address, '90');
+      await expect(buyPromise)
+        .to.emit(dysToken, 'Transfer')
+        .withArgs(dex.address, user.address, '95');
+
+      await expect(sellPromise)
+        .to.emit(dysToken, 'Transfer')
+        .withArgs(user.address, dysToken.address, '10');
+      await expect(buyPromise)
+        .to.emit(dysToken, 'Transfer')
+        .withArgs(dex.address, dysToken.address, '5');
+
+      await expect(sellPromise).not.to.emit(
+        uniswapV2Router,
+        'SwapExactTokensForETH'
+      );
+      await expect(buyPromise).not.to.emit(
+        uniswapV2Router,
+        'SwapExactTokensForETH'
+      );
     });
     it('it should transfer tokens and not apply fee if recipient is whitelisted', async () => {
       await dysTokenAdmin.setWhitelistedAddress(user.address, true);
@@ -283,23 +314,6 @@ describe('DYSToken', () => {
     });
   });
 
-  describe('setUniswapRouter', () => {
-    it('should set uniswapRouter if called by admin', async () => {
-      await dysTokenAdmin.setUniswapRouter(user.address);
-      const v2RouterAddress = await dysToken.v2Router();
-      expect(v2RouterAddress).to.equal(user.address);
-      expect(
-        await dysToken.allowance(dysToken.address, v2RouterAddress)
-      ).to.equal(MAX_SOLIDITY_INTEGER);
-
-      await expect(
-        dysTokenUser.setUniswapRouter(user.address)
-      ).to.be.revertedWith(
-        `AccessControl: account ${user.address.toLowerCase()} is missing role ${DEFAULT_ADMIN_ROLE}`
-      );
-    });
-  });
-
   describe('setApprovalFor', () => {
     it('should set approval for a given address if called by admin', async () => {
       await dysTokenAdmin.setApprovalFor(user.address, 100);
@@ -372,6 +386,28 @@ describe('DYSToken', () => {
       ).to.be.revertedWith(
         `AccessControl: account ${user.address.toLowerCase()} is missing role ${TREASURER_ROLE}`
       );
+    });
+
+    it('should fail to withdraw to zero address', async () => {
+      await weth
+        .connect(user)
+        .transfer(dysToken.address, ethers.utils.parseEther('10'));
+
+      await user.sendTransaction({
+        to: dysToken.address,
+        value: ethers.utils.parseEther('10')
+      });
+
+      await expect(
+        dysTokenTreasurer.withdrawTokens(
+          weth.address,
+          ethers.constants.AddressZero
+        )
+      ).to.be.revertedWith('DYSToken: Cannot withdraw tokens to zero address');
+
+      await expect(
+        dysTokenTreasurer.withdrawETH(ethers.constants.AddressZero)
+      ).to.be.revertedWith('DYSToken: Cannot withdraw ETH to zero address');
     });
   });
 });
