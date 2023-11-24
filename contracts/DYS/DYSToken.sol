@@ -6,11 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@opengsn/contracts/src/ERC2771Recipient.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 
-contract DYSToken is ERC20, ERC2771Recipient, AccessControl, Pausable, ReentrancyGuard {
+contract DYSToken is ERC20, ERC2771Recipient, AccessControl, Pausable {
     // can pause the contract
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     // can withdraw tokens and eth
