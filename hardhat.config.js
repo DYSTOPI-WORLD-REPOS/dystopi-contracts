@@ -37,6 +37,15 @@ module.exports = {
           apiKey: process.env.POLYGONSCAN_API_KEY
         }
       }
+    },
+    bsc: {
+      url: process.env.BSC_URL,
+      accounts: [process.env.BSC_DEPLOYER],
+      verify: {
+        etherscan: {
+          apiKey: process.env.BSCSCAN_API_KEY
+        }
+      }
     }
   },
   solidity: {
@@ -53,9 +62,9 @@ module.exports = {
       hardhat: 0
     },
     dysBeneficiary: {
-      polygonMumbai: 0,
       hardhat: 0,
-      mainnet: '0x9Cc9F2a6C035Ce0d3Dc37013516f03cbe2127565'
+      mainnet: '0x9Cc9F2a6C035Ce0d3Dc37013516f03cbe2127565',
+      bsc: '0x1315AbD49D4A978749a9d9DA3cD54C319E7b5b10'
     },
     marketplaceBeneficiary: {
       polygonMumbai: 0,
@@ -65,9 +74,13 @@ module.exports = {
       polygonMumbai: '0xd8288Ce8348D53887Cb934240B93F5B41B08D4BE',
       hardhat: '0xd8288Ce8348D53887Cb934240B93F5B41B08D4BE'
     },
+    pancakeRouter: {
+      bsc: '0x10ED43C718714eb63d5aA57B78B54704E256024E'
+    },
     admin: {
       polygonMumbai: 0,
-      hardhat: 0
+      hardhat: 0,
+      bsc: '0x995Cf311dB5E0E45b7C3aE23ed62FB0237eEFABC'
     },
     pauser: {
       polygonMumbai: 0,

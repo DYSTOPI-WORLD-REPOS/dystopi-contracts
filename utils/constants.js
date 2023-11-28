@@ -23,6 +23,7 @@ module.exports = {
     actions: {
       // deploy
       deployDysToken: 'deployDysToken',
+      deployDysTimeLock: 'deployDysTimeLock',
       deployDysVesting: 'deployDYSVesting',
       deployInGameItems: 'deployInGameItems',
       deployInGameItemMarketplace: 'deployInGameItemMarketplace',
@@ -37,6 +38,7 @@ module.exports = {
   },
   CONTRACTS: {
     dysToken: 'DYSToken',
+    dysTimeLock: 'DYSTimeLock',
     dysVesting: 'DYSVesting',
     inGameItems: 'InGameItems',
     inGameItemMarketplace: 'InGameItemMarketplace',
